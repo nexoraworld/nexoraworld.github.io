@@ -7,5 +7,25 @@
 <body>
   <h1>🚀 Nexora</h1>
   <p>Welcome to the official Nexora website.</p>
-</body>
+</body>// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBPGkBnpiPnt6KkVGTG5BaE-HWgGShFjK4",
+  authDomain: "nexora-d561e.firebaseapp.com",
+  projectId: "nexora-d561e",
+  storageBucket: "nexora-d561e.firebasestorage.app",
+  messagingSenderId: "990540423646",
+  appId: "1:990540423646:web:7ac3b1e32f494290a27d4f",
+  measurementId: "G-ZB6TD72W6R"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 </html>
