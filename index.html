@@ -5,6 +5,139 @@
   <title>Nexora</title>
 </head>
 <body>
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexoraBooks</title>
+<link rel="stylesheet" href="style.css">
+</head>
+  body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f2f2f2;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+.book-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 40px;
+}
+
+.book-card {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  width: 150px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.book-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+}
+
+.book-card img {
+  width: 100%;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.book-card h3 {
+  margin: 10px 0;
+}
+
+/* Pop-up */
+.popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  width: 80%;
+  max-width: 400px;
+  text-align: left;
+  position: relative;
+}
+
+#close-popup {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+  const cards = document.querySelectorAll('.book-card');
+const popup = document.getElementById('popup');
+const popupTitle = document.getElementById('popup-title');
+const popupDesc = document.getElementById('popup-desc');
+const closeBtn = document.getElementById('close-popup');
+
+cards.forEach(card => {
+  card.addEventListener('click', () => {
+    popupTitle.textContent = card.dataset.title;
+    popupDesc.textContent = card.dataset.desc;
+    popup.style.display = 'flex';
+  });
+});
+
+closeBtn.addEventListener('click', () => {
+  popup.style.display = 'none';
+});
+
+window.addEventListener('click', (e) => {
+  if(e.target === popup) popup.style.display = 'none';
+});
+<body>
+
+<h1>📚 NexoraBooks</h1>
+
+<div class="book-container">
+  <div class="book-card" data-title="Book 1" data-desc="This is a brief description of Book 1.">
+    <img src="https://via.placeholder.com/150" alt="Book 1">
+    <h3>Book 1</h3>
+  </div>
+  <div class="book-card" data-title="Book 2" data-desc="This is a brief description of Book 2.">
+    <img src="https://via.placeholder.com/150" alt="Book 2">
+    <h3>Book 2</h3>
+  </div>
+  <div class="book-card" data-title="Book 3" data-desc="This is a brief description of Book 3.">
+    <img src="https://via.placeholder.com/150" alt="Book 3">
+    <h3>Book 3</h3>
+  </div>
+</div>
+
+<!-- Pop-up -->
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <span id="close-popup">&times;</span>
+    <h2 id="popup-title"></h2>
+    <p id="popup-desc"></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
   <h2>User System - Nexora</h2>
 
 <!-- Kayıt Formu -->
