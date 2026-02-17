@@ -14,8 +14,6 @@
 :root{
   --primary:#0ff;
   --bg-dark:#0b0c2a;
-  --bg-light:#f0f4f8;
-  --bg-mars:#7a0000;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -26,9 +24,58 @@ body{
   color:white;
   transition:background 0.8s ease;
   overflow-x:hidden;
+  display:flex; /* ANA LAYOUT */
 }
 
 a{text-decoration:none;color:inherit}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar{
+  width:220px;
+  height:100vh;
+  background:#050617;
+  border-right:1px solid cyan;
+  padding:25px 15px;
+  position:fixed;
+  left:0;
+  top:0;
+}
+
+.sidebar h2{
+  color:cyan;
+  margin-bottom:30px;
+  text-align:center;
+}
+
+.sidebar ul{
+  list-style:none;
+}
+
+.sidebar li{
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.sidebar li:hover{
+  background:cyan;
+  color:black;
+  transform:translateX(5px);
+}
+
+/* =========================
+   MAIN CONTENT WRAPPER
+========================= */
+
+.main-content{
+  margin-left:220px;
+  width:100%;
+}
 
 /* =========================
    HEADER
@@ -106,8 +153,6 @@ a{text-decoration:none;color:inherit}
   transform:scale(1.05);
 }
 
-/* Ghost Track */
-
 .ghost-track{
   width:100%;
   height:50px;
@@ -161,85 +206,25 @@ a{text-decoration:none;color:inherit}
   50%{transform:translateY(-15px)}
 }
 
-/* =========================
-   BOOK GRID
-========================= */
-
-.book-container{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:25px;
-  padding:30px;
-}
-
-.book-card{
-  width:180px;
-  background:#111;
-  border-radius:15px;
-  border:2px solid cyan;
-  overflow:hidden;
-  transition:0.4s;
-  cursor:pointer;
-}
-
-.book-card:hover{
-  transform:translateY(-10px) scale(1.05);
-  box-shadow:0 0 25px cyan;
-}
-
-.book-card img{
-  width:100%;
-  height:240px;
-  object-fit:cover;
-}
-
-.book-card h3{
-  padding:10px;
-  text-align:center;
-}
-
-/* =========================
-   THEME
-========================= */
-
-#theme-container{
-  position:fixed;
-  top:100px;
-  left:15px;
-  width:60px;
-  height:60px;
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(10px);
-  border-radius:15px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:9999;
-}
-
-#theme-icons{
-  display:none;
-  flex-direction:column;
-  gap:10px;
-  position:absolute;
-  left:80px;
-}
-
-#theme-icons button{
-  width:50px;
-  height:50px;
-  border-radius:12px;
-  border:none;
-  cursor:pointer;
-  font-size:22px;
-}
-
 </style>
 </head>
 
 <body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>NEXORA</h2>
+  <ul>
+    <li>Dashboard</li>
+    <li>Explore</li>
+    <li>Library</li>
+    <li>AI Assistant</li>
+    <li>Settings</li>
+  </ul>
+</div>
+
+<!-- MAIN AREA -->
+<div class="main-content">
 
 <div class="top-header">
   <div class="logo-small">NEXORA</div>
@@ -251,7 +236,6 @@ a{text-decoration:none;color:inherit}
   </div>
 </div>
 
-<!-- CATEGORY + GHOST -->
 <div class="category-wrapper">
   <div class="category-bar" id="categoryBar">
     <div class="category-item">AI Books</div>
@@ -278,10 +262,9 @@ a{text-decoration:none;color:inherit}
 <span class="letter">A</span>
 </div>
 
+</div>
+
 <script>
-
-/* GHOST SYSTEM */
-
 const categories=document.querySelectorAll('.category-item');
 const ghost=document.getElementById('ghost');
 
@@ -292,7 +275,6 @@ categories.forEach(cat=>{
     ghost.style.left=rect.left + rect.width/2 - ghost.offsetWidth/2 + 'px';
   });
 });
-
 </script>
 
 </body>
