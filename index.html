@@ -3,269 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NexoraBooks</title>
+  <title>NexoraBooks 2050</title>
 
   <!-- -------------------- CSS -------------------- -->
   <style>
-    /* Genel Stil */
+    /* ---------------- Genel ---------------- */
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
       font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364); /* 2050 tarzı mavi tonlar */
       overflow-x: hidden;
+      background-color: #0b0c2a;
+      color: #fff;
       transition: background 1s ease;
     }
+    a { text-decoration: none; color: inherit; }
 
-    /* Kitap Başlığı */
-    h1 {
-      text-align: center;
-      margin: 25px 0;
-      color: #fff;
-      font-size: 2.2em;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 5px rgba(0,0,0,0.4);
-    }
-
-    /* Kitap Kartları */
-    .book-container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 25px;
-      margin: 40px 10px;
-    }
-
-    .book-card {
-      background-color: #0c1b2a;
-      width: 160px;
-      border-radius: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.5s, box-shadow 0.5s, border-color 1s;
-      border: 3px solid #fff;
-      animation: float 6s ease-in-out infinite;
-    }
-
-    .book-card:hover {
-      transform: translateY(-15px) scale(1.05);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      border-color: currentColor;
-      animation: borderGlow 6s infinite alternate;
-    }
-
-    .book-card img {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-    }
-
-    .book-card h3 {
-      margin: 10px 0;
-      font-size: 1em;
-      color: #fff;
-      text-align: center;
-    }
-
-    /* Pop-up Stil */
-    .popup {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .popup-content {
-      background-color: #0c1b2a;
-      padding: 25px;
-      border-radius: 20px;
-      width: 90%;
-      max-width: 450px;
-      text-align: left;
-      position: relative;
-      animation: fadeIn 0.4s ease;
-      color: #fff;
-    }
-
-    #close-popup {
-      position: absolute;
-      top: 10px; right: 15px;
-      font-size: 28px;
-      cursor: pointer;
-    }
-
-    .popup-button {
-      margin-top: 15px;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 8px;
-      background-color: #ff8c42;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .popup-button:hover {
-      background-color: #ff6b1a;
-    }
-
-    /* Animasyonlar */
-    @keyframes fadeIn {
-      from {opacity: 0; transform: scale(0.95);}
-      to {opacity: 1; transform: scale(1);}
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0);}
-      50% { transform: translateY(-8px);}
-    }
-
-    @keyframes borderGlow {
-      0% { border-color: #FFD700; }
-      33% { border-color: #FF4500; }
-      66% { border-color: #800080; }
-      100% { border-color: #FFD700; }
-    }
-
-    /* Nexora Logo */
+    /* ---------------- Nexora Logo ---------------- */
     #nexora-logo {
       display: flex;
       justify-content: center;
       font-size: 80px;
       font-weight: bold;
-      margin-top: 50px;
-      position: relative;
-      color: gold;
+      margin-top: 40px;
       letter-spacing: 5px;
+      position: relative;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      background: linear-gradient(90deg, #fffc, #fff0);
+      animation: logoGlow 8s infinite alternate;
     }
+    .letter { display: inline-block; position: relative; animation: letterMove 6s infinite; }
+    .letter::after { content:"✨"; position:absolute; top:-10px; left:0; animation: starFlow 6s infinite; font-size:0.5em; }
+    @keyframes letterMove { 0%{transform:translateY(0) scale(1);}50%{transform:translateY(-30px) scale(0.8);}100%{transform:translateY(0) scale(1);} }
+    @keyframes starFlow {0%{opacity:0;transform:translateY(0) rotate(0deg);}50%{opacity:1;transform:translateY(-20px) rotate(180deg);}100%{opacity:0;transform:translateY(0) rotate(360deg);} }
+    @keyframes logoGlow { 0%{filter:drop-shadow(0 0 5px cyan);}100%{filter:drop-shadow(0 0 20px magenta);} }
 
-    .letter {
-      display: inline-block;
-      position: relative;
-      animation: letterMove 6s infinite;
+    /* ---------------- Tema Butonları ---------------- */
+    #theme-buttons {
+      position: fixed; top: 10px; left: 10px; display:flex; gap:10px; z-index:10000;
     }
-
-    @keyframes letterMove {
-      0% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-30px) scale(0.8); }
-      100% { transform: translateY(0) scale(1); }
+    #theme-buttons button {
+      font-size:30px; background:none; border:none; cursor:pointer; transition: transform 0.3s;
+      color:#fff;
     }
+    #theme-buttons button:hover { transform: scale(1.2) rotate(10deg); }
 
-    .letter::after {
-      content: "✨";
-      position: absolute;
-      top: -10px;
-      left: 0;
-      animation: starFlow 6s infinite;
-      font-size: 0.5em;
-    }
-
-    @keyframes starFlow {
-      0% { opacity: 0; transform: translateY(0) rotate(0deg); }
-      50% { opacity: 1; transform: translateY(-20px) rotate(180deg); }
-      100% { opacity: 0; transform: translateY(0) rotate(360deg); }
-    }
-
-    /* Sol orta buton: Güneş/Ay/Mars */
-    #theme-container {
+    /* ---------------- Sol Menü ---------------- */
+    #side-menu {
       position: fixed;
-      top: 50%;
-      left: 0;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      z-index: 10000;
-    }
-
-    #theme-button {
-      width: 60px;
-      height: 60px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      position: relative;
-      backdrop-filter: blur(10px);
-    }
-
-    #theme-icons {
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      left: 70px;
-      top: 50%;
-      transform: translateY(-50%);
-      gap: 15px;
-    }
-
-    #theme-icons button {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      transition: transform 0.3s;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-
-    #theme-icons button:hover {
-      transform: scale(1.2) rotate(10deg);
-    }
-
-    /* Menü Okları Sol Orta */
-    #menu-arrows {
-      position: fixed;
-      left: 70px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      z-index: 9999;
-    }
-
-    .arrow {
-      width: 25px;
-      height: 25px;
-      background-color: #fff;
-      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-      cursor: pointer;
-      transition: transform 0.4s, opacity 0.4s;
-    }
-
-    .arrow.down { transform: rotate(180deg); }
-
-    /* Menü panel */
-    #menu-panel {
-      position: fixed;
-      left: 0;
-      top: 0;
+      left: -300px;
+      top:0;
       width: 300px;
       height: 100%;
-      background-color: #0c1b2a;
-      transform: translateX(-100%);
-      transition: transform 0.5s;
+      background: rgba(20,20,50,0.95);
+      border-right: 2px solid cyan;
+      display: flex;
+      flex-direction: column;
       padding: 20px;
-      color: #fff;
-      overflow-y: auto;
-      z-index: 999;
+      transition: left 0.5s ease;
+      z-index: 9999;
     }
+    #side-menu.open { left:0; }
+    #side-menu h3 { margin-bottom:15px; color:#0ff; font-size:1.1em; cursor:pointer; transition: all 0.3s; }
+    #side-menu h3:hover { color:#ff0; transform:translateX(5px); }
 
-    #menu-panel h3 { margin-top: 20px; }
+    /* Menü aç/kapa oklar */
+    #menu-toggle { position: fixed; left:10px; top:50%; font-size:40px; cursor:pointer; z-index:10001; color:#0ff; }
 
+    /* ---------------- Kitap Kartları ---------------- */
+    .book-container { display:flex; flex-wrap:wrap; justify-content:center; gap:25px; margin:40px 10px; z-index:1; }
+    .book-card {
+      background-color:#111;
+      width:160px; border-radius:20px;
+      box-shadow:0 5px 15px rgba(0,255,255,0.3);
+      overflow:hidden; cursor:pointer;
+      transition: transform 0.5s, box-shadow 0.5s, border-color 1s;
+      border:3px solid #0ff;
+      animation: float 6s ease-in-out infinite;
+    }
+    .book-card img { width:100%; height:220px; object-fit:cover; }
+    .book-card h3 { margin:10px 0; font-size:1em; color:#fff; text-align:center; }
+    .book-card:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 20px 40px cyan; border-color: magenta; }
+
+    /* Floating ve border glow */
+    @keyframes float {0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    @keyframes borderGlow {0%{border-color:#FFD700;}33%{border-color:#FF4500;}66%{border-color:#800080;}100%{border-color:#FFD700;}}
+
+    /* ---------------- Pop-up ---------------- */
+    .popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.9); justify-content:center; align-items:center; z-index:10000; }
+    .popup-content { background:#111; padding:25px; border-radius:20px; width:90%; max-width:500px; text-align:left; position:relative; color:#0ff; box-shadow:0 0 30px cyan; }
+    #close-popup { position:absolute; top:10px; right:15px; font-size:28px; cursor:pointer; color:#ff0; }
+    .popup-button { margin-top:15px; padding:10px 15px; border:none; border-radius:8px; background-color:#ff8c42; color:white; font-weight:bold; cursor:pointer; transition:background-color 0.3s; }
+    .popup-button:hover{background-color:#ff6b1a;}
+
+    /* ---------------- Responsive ---------------- */
+    @media (max-width:600px){ .book-container{flex-direction:column;align-items:center;} #side-menu{width:80%;} }
   </style>
 </head>
 <body>
@@ -280,26 +112,17 @@
     <span class="letter">A</span>
   </div>
 
-  <!-- Sol orta tema butonları -->
-  <div id="theme-container">
-    <div id="theme-button">☀️🌙🪐</div>
-    <div id="theme-icons">
-      <button id="sun-btn">🌞</button>
-      <button id="moon-btn">🌙</button>
-      <button id="mars-btn">🪐</button>
-    </div>
+  <!-- Tema Butonları -->
+  <div id="theme-buttons">
+    <button id="sun-moon-btn">🌞🌙</button>
+    <button id="mars-btn">🪐</button>
   </div>
 
-  <!-- Menü okları -->
-  <div id="menu-arrows">
-    <div class="arrow up"></div>
-    <div class="arrow down"></div>
-  </div>
-
-  <!-- Menü panel -->
-  <div id="menu-panel">
+  <!-- Sol Menü Aç/Kapa Ok -->
+  <div id="menu-toggle">⬇️</div>
+  <div id="side-menu">
     <h3>AI Kitaplar</h3>
-    <h3>Kurumsal Mağazalar</h3>
+    <h3>Kurumsal Kitap Mağazaları</h3>
     <h3>Gerçek Yazarlar</h3>
     <h3>Bağımsız Yayıncılar</h3>
     <h3>Yayınevleri Kitapları</h3>
@@ -307,9 +130,10 @@
     <h3>Aksiyon</h3>
     <h3>Roman</h3>
     <h3>Derin Araştırma</h3>
+    <h3>Diğer</h3>
   </div>
 
-  <!-- Kitaplar -->
+  <!-- Kitap Kartları -->
   <h1>📚 NexoraBooks</h1>
   <div class="book-container">
     <div class="book-card" data-title="Büyük Gatsby" data-desc="F. Scott Fitzgerald'ın 1920'lerde geçen klasik romanı.">
@@ -338,7 +162,7 @@
 
   <!-- -------------------- JS -------------------- -->
   <script>
-    // Kitap pop-up
+    // ---------- Pop-up ----------
     const cards = document.querySelectorAll('.book-card');
     const popup = document.getElementById('popup');
     const popupTitle = document.getElementById('popup-title');
@@ -346,55 +170,75 @@
     const closeBtn = document.getElementById('close-popup');
     const popupCloseBtn = document.getElementById('popup-close-btn');
 
-    cards.forEach(card => {
-      card.addEventListener('click', () => {
+    cards.forEach(card=>{
+      card.addEventListener('click',()=>{
         popupTitle.textContent = card.dataset.title;
         popupDesc.textContent = card.dataset.desc;
-        popup.style.display = 'flex';
+        popup.style.display='flex';
+      });
+    });
+    closeBtn.addEventListener('click',()=>{popup.style.display='none';});
+    popupCloseBtn.addEventListener('click',()=>{popup.style.display='none';});
+    window.addEventListener('click',(e)=>{if(e.target===popup) popup.style.display='none';});
+
+    // ---------- Tema Butonları ----------
+    const sunMoonBtn = document.getElementById('sun-moon-btn');
+    const marsBtn = document.getElementById('mars-btn');
+
+    sunMoonBtn.addEventListener('click',()=>{
+      if(document.body.classList.contains('day')){
+        document.body.classList.remove('day'); document.body.classList.add('night');
+      }else{
+        document.body.classList.remove('night'); document.body.classList.add('day');
+      }
+    });
+
+    marsBtn.addEventListener('click',()=>{
+      document.body.classList.add('mars');
+      const marsEffect = document.createElement('div');
+      marsEffect.id='mars-effect';
+      marsEffect.style.position='fixed';
+      marsEffect.style.top='50%';
+      marsEffect.style.left='50%';
+      marsEffect.style.width='300px';
+      marsEffect.style.height='300px';
+      marsEffect.style.marginLeft='-150px';
+      marsEffect.style.marginTop='-150px';
+      marsEffect.style.borderRadius='50%';
+      marsEffect.style.background='url("https://mars.nasa.gov/system/news_items/main_images/9401_PIA25639-MarsGlobe-16x9.jpg") center/cover no-repeat';
+      marsEffect.style.zIndex='9999';
+      marsEffect.style.boxShadow='0 0 50px 10px cyan, 0 0 100px 20px white';
+      marsEffect.style.animation='marsZoom 2s forwards';
+      document.body.appendChild(marsEffect);
+      setTimeout(()=>{marsEffect.remove();},2000);
+    });
+
+    const styleSheet=document.createElement("style");
+    styleSheet.type="text/css";
+    styleSheet.innerText=`@keyframes marsZoom {0%{transform:scale(0.1) rotate(0deg);opacity:1;}70%{transform:scale(1.5) rotate(360deg);opacity:1;}100%{transform:scale(2) rotate(720deg);opacity:0;}}`;
+    document.head.appendChild(styleSheet);
+
+    // ---------- Sol Menü Aç/Kapa ----------
+    const menuToggle = document.getElementById('menu-toggle');
+    const sideMenu = document.getElementById('side-menu');
+    menuToggle.addEventListener('click',()=>{
+      sideMenu.classList.toggle('open');
+      menuToggle.textContent = sideMenu.classList.contains('open') ? '⬆️' : '⬇️';
+    });
+
+    // ---------- Menü Başlıkları Modal (Basit) ----------
+    const menuHeaders = sideMenu.querySelectorAll('h3');
+    menuHeaders.forEach(header=>{
+      header.addEventListener('click',()=>{
+        alert(`"${header.textContent}" bölümünü incelemek için modal açılacak (geliştirilebilir).`);
       });
     });
 
-    closeBtn.addEventListener('click', () => popup.style.display='none');
-    popupCloseBtn.addEventListener('click', () => popup.style.display='none');
-    window.addEventListener('click', e => { if(e.target === popup) popup.style.display='none'; });
-
-    // Tema butonları
-    const themeButton = document.getElementById('theme-button');
-    const themeIcons = document.getElementById('theme-icons');
-    const sunBtn = document.getElementById('sun-btn');
-    const moonBtn = document.getElementById('moon-btn');
-    const marsBtn = document.getElementById('mars-btn');
-
-    themeButton.addEventListener('click', () => {
-      themeIcons.style.display = themeIcons.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    sunBtn.addEventListener('click', () => {
-      document.body.style.background = 'linear-gradient(to bottom, #87ceeb, #f0f4f8)';
-    });
-
-    moonBtn.addEventListener('click', () => {
-      document.body.style.background = '#0b0c2a';
-    });
-
-    marsBtn.addEventListener('click', () => {
-      document.body.style.background = '#b22222';
-    });
-
-    // Menü okları
-    const menuPanel = document.getElementById('menu-panel');
-    const arrowUp = document.querySelector('.arrow.up');
-    const arrowDown = document.querySelector('.arrow.down');
-
-    arrowDown.addEventListener('click', () => {
-      menuPanel.style.transform = 'translateX(0)';
-      arrowDown.style.transform = 'translateY(50px)';
-    });
-
-    arrowUp.addEventListener('click', () => {
-      menuPanel.style.transform = 'translateX(-100%)';
-      arrowUp.style.transform = 'translateY(-50px)';
-    });
+    // ---------- Arka Plan Renkleri Her 8 Saat ----------
+    const colors=['#0b0c2a','#1a1a40','#0f1a2a','#101030','#201020'];
+    const hours=new Date().getHours();
+    document.body.style.backgroundColor=colors[hours%colors.length];
   </script>
+
 </body>
 </html>
