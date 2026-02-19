@@ -3,40 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v6 Quantum Elite</title>
+<title>NEXORA v7 Quantum Architecture</title>
 
 <style>
+
+/* ================= ROOT ================= */
+
 :root{
-  --accent:#00f2ff;
   --dark:#0f0f14;
-  --light:#f6f2e8;
+  --light:#f5f1e6;
+  --cyan:#00f2ff;
 }
 
 body{
   margin:0;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:var(--dark);
   color:#fff;
-  overflow-x:hidden;
   transition:0.4s;
+  overflow-x:hidden;
 }
 
-/* ================= NEON MOVING LINES ================= */
+/* ================= THEME ================= */
 
-.neon-line{
+body.light{
+  background:var(--light);
+  color:#111;
+}
+
+/* ================= MOVING NEON LINES ================= */
+
+.neon{
   position:fixed;
   width:100%;
   height:2px;
-  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
   background-size:300px;
-  animation:moveLine 3s linear infinite;
+  animation:move 3s linear infinite;
   z-index:999;
 }
+.top{top:0;}
+.bottom{bottom:0;}
 
-.neon-top{top:0;}
-.neon-bottom{bottom:0;}
-
-@keyframes moveLine{
+@keyframes move{
   0%{background-position:-300px}
   100%{background-position:300px}
 }
@@ -45,161 +54,169 @@ body{
 
 .sidebar{
   position:fixed;
-  top:0;
   left:0;
-  width:100%;
-  height:220px;
+  top:0;
+  height:100%;
+  width:220px;
   background:#111;
-  transition:0.5s ease;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  border-bottom:1px solid var(--accent);
+  padding-top:60px;
+  transition:0.4s;
 }
 
 .sidebar.collapsed{
-  height:80px;
+  width:70px;
 }
 
-.sidebar h1{
-  margin:0;
-  color:var(--accent);
-  letter-spacing:3px;
-}
+/* ================= DUAL ARROW CONTROL ================= */
 
-/* ================= DUAL ARROW DIVIDER ================= */
-
-.divider{
-  margin-top:20px;
+.arrow-control{
+  position:fixed;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
   display:flex;
+  flex-direction:column;
   align-items:center;
-  gap:15px;
   cursor:pointer;
-  transition:0.3s;
-}
-
-.divider:hover{
-  transform:scale(1.1);
+  z-index:1000;
 }
 
 .arrow{
   font-size:22px;
-  transition:0.3s;
+  transition:0.4s;
 }
 
-.divider:hover .arrow{
-  color:var(--accent);
-  text-shadow:0 0 15px var(--accent);
-}
-
-/* Dotted Glow Line */
 .dots{
-  width:150px;
-  height:4px;
-  background:repeating-linear-gradient(
-    90deg,
-    var(--accent),
-    var(--accent) 5px,
-    transparent 5px,
-    transparent 12px
-  );
-  animation:pulseDots 2s infinite;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin:10px 0;
+  opacity:0;
+  transition:0.4s;
 }
 
-@keyframes pulseDots{
-  0%{opacity:0.4}
-  50%{opacity:1}
-  100%{opacity:0.4}
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  animation:glow 1.5s infinite alternate;
+}
+
+.dot:nth-child(1){background:red;}
+.dot:nth-child(2){background:green;}
+.dot:nth-child(3){background:yellow;}
+.dot:nth-child(4){background:purple;}
+
+@keyframes glow{
+  from{box-shadow:0 0 5px currentColor;}
+  to{box-shadow:0 0 20px currentColor;}
+}
+
+.arrow-control.active .arrow:first-child{
+  transform:translateY(-20px);
+}
+.arrow-control.active .arrow:last-child{
+  transform:translateY(20px);
+}
+.arrow-control.active .dots{
+  opacity:1;
 }
 
 /* ================= CONTENT ================= */
 
 .content{
-  margin-top:220px;
-  padding:40px;
-  transition:0.5s;
+  margin-left:220px;
+  padding:30px;
+  transition:0.4s;
 }
 
 .sidebar.collapsed ~ .content{
-  margin-top:80px;
+  margin-left:70px;
 }
 
-/* ================= BUTTONS ================= */
+/* ================= BUTTON ================= */
 
-.glow-btn{
-  padding:15px 30px;
+.btn{
+  padding:10px 20px;
   border:none;
-  border-radius:30px;
+  border-radius:20px;
   background:#111;
   color:#fff;
+  margin:5px;
   cursor:pointer;
-  margin:10px;
-  transition:0.3s;
-  box-shadow:0 0 10px var(--accent);
+  box-shadow:0 0 10px var(--cyan);
 }
 
-.glow-btn:hover{
-  box-shadow:0 0 30px var(--accent);
-  transform:scale(1.05);
+.btn:hover{
+  box-shadow:0 0 25px var(--cyan);
 }
 
-/* ================= THEME TOGGLE ================= */
+/* ================= GRID ================= */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#111;
+  padding:15px;
+  border-radius:10px;
+  border:1px solid var(--cyan);
+}
+
+/* ================= THEME BUTTON ================= */
 
 .theme-toggle{
   position:fixed;
-  bottom:30px;
-  right:30px;
+  bottom:20px;
+  right:20px;
   width:60px;
   height:60px;
   border-radius:50%;
   border:none;
   font-size:24px;
   cursor:pointer;
-  box-shadow:0 0 20px var(--accent);
+  box-shadow:0 0 20px var(--cyan);
 }
-
-/* ================= PAGES ================= */
-
-.page{display:none;}
-.page.active{display:block;}
 
 </style>
 </head>
 <body>
 
-<div class="neon-line neon-top"></div>
-<div class="neon-line neon-bottom"></div>
+<div class="neon top"></div>
+<div class="neon bottom"></div>
 
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar"></div>
 
-<h1>NEXORA</h1>
-
-<div class="divider" onclick="toggleSidebar()">
-  <div class="arrow" id="upArrow">▲</div>
-  <div class="dots"></div>
-  <div class="arrow" id="downArrow">▼</div>
-</div>
-
+<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
+  <div class="arrow">▲</div>
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="arrow">▼</div>
 </div>
 
 <div class="content">
 
-<div id="home" class="page active">
-  <h2>Quantum Core Active</h2>
-  <button class="glow-btn" onclick="openPage('panel1')">Panel 1</button>
-  <button class="glow-btn" onclick="openPage('panel2')">Panel 2</button>
-</div>
+<h2>NEXORA Quantum Core</h2>
 
-<div id="panel1" class="page">
-  <h2>Panel 1</h2>
-  <button class="glow-btn" onclick="goBack()">Geri</button>
-</div>
+<input id="search" placeholder="Search...">
+<select id="categoryFilter">
+<option value="all">All</option>
+<option value="AI">AI</option>
+<option value="SciFi">SciFi</option>
+</select>
 
-<div id="panel2" class="page">
-  <h2>Panel 2</h2>
-  <button class="glow-btn" onclick="goBack()">Geri</button>
-</div>
+<button class="btn" onclick="openAuth()">Login</button>
+<button class="btn" onclick="openAdd()">Add Product</button>
+<button class="btn" onclick="openProfile()">Profile</button>
+
+<div class="grid" id="productGrid"></div>
 
 </div>
 
@@ -207,43 +224,115 @@ body{
 
 <script>
 
-/* SIDEBAR TOGGLE */
-function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("collapsed");
+/* ================= STATE ================= */
+
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let currentUser = localStorage.getItem("currentUser");
+let follows = JSON.parse(localStorage.getItem("follows")) || {};
+
+/* ================= MENU ================= */
+
+function toggleMenu(){
+  sidebar.classList.toggle("collapsed");
+  arrowControl.classList.toggle("active");
 }
 
-/* THEME SWITCH */
+/* ================= THEME ================= */
+
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.body.classList.toggle("dark");
-  let btn=document.getElementById("themeBtn");
-  btn.textContent=document.body.classList.contains("dark")?"🌙":"☀";
+  themeBtn.textContent=document.body.classList.contains("light")?"☀":"🌙";
 }
 
-/* PAGE SYSTEM */
-function openPage(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  history.pushState({page:id},"",`#${id}`);
-}
+/* ================= AUTH ================= */
 
-function goBack(){
-  history.back();
-}
-
-/* BACK FIX */
-window.addEventListener("popstate",function(){
-  let page=location.hash.replace("#","");
-  if(page){
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById(page).classList.add("active");
+function openAuth(){
+  let u=prompt("Username:");
+  let p=prompt("Password:");
+  let user=users.find(x=>x.username===u && x.password===p);
+  if(user){
+    currentUser=u;
+    localStorage.setItem("currentUser",u);
+    alert("Logged in");
   }else{
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById("home").classList.add("active");
+    users.push({username:u,password:p});
+    localStorage.setItem("users",JSON.stringify(users));
+    alert("Registered & Logged in");
+    currentUser=u;
+    localStorage.setItem("currentUser",u);
   }
-});
+}
 
-/* Prevent full exit */
+/* ================= PRODUCT ================= */
+
+function openAdd(){
+  if(!currentUser) return alert("Login first");
+  let title=prompt("Title");
+  let cat=prompt("Category (AI/SciFi)");
+  let desc=prompt("Description");
+  let id=Date.now();
+  products.push({id,title,cat,desc,owner:currentUser});
+  localStorage.setItem("products",JSON.stringify(products));
+  renderProducts();
+}
+
+function renderProducts(){
+  productGrid.innerHTML="";
+  let searchVal=search.value.toLowerCase();
+  let catVal=categoryFilter.value;
+
+  products.forEach(p=>{
+    if(
+      (catVal==="all"||p.cat===catVal) &&
+      p.title.toLowerCase().includes(searchVal)
+    ){
+      productGrid.innerHTML+=`
+      <div class="card">
+        <h4>${p.title}</h4>
+        <p>${p.cat}</p>
+        <p>${p.desc}</p>
+        <p>By: ${p.owner}</p>
+        ${p.owner===currentUser?`<button onclick="deleteProduct(${p.id})">Delete</button>`:""}
+        <button onclick="followUser('${p.owner}')">Follow</button>
+      </div>`;
+    }
+  });
+}
+
+function deleteProduct(id){
+  products=products.filter(p=>p.id!==id);
+  localStorage.setItem("products",JSON.stringify(products));
+  renderProducts();
+}
+
+/* ================= FOLLOW ================= */
+
+function followUser(user){
+  if(!currentUser) return alert("Login first");
+  if(!follows[currentUser]) follows[currentUser]=[];
+  follows[currentUser].push(user);
+  localStorage.setItem("follows",JSON.stringify(follows));
+  alert("Followed "+user);
+}
+
+/* ================= PROFILE ================= */
+
+function openProfile(){
+  if(!currentUser) return alert("Login first");
+  let myProducts=products.filter(p=>p.owner===currentUser);
+  alert("My Products: "+myProducts.map(p=>p.title).join(", "));
+}
+
+/* ================= FILTER ================= */
+
+search.onkeyup=renderProducts;
+categoryFilter.onchange=renderProducts;
+renderProducts();
+
+/* ================= BACK FIX ================= */
+
 history.pushState(null,"",location.href);
 window.addEventListener("popstate",function(){
   history.pushState(null,"",location.href);
