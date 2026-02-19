@@ -1,366 +1,290 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexoraBooks 2050 - Quantum Core</title>
-
+<title>Nexora v4</title>
 <style>
 
-/* ================= GLOBAL ================= */
 :root{
-  --bg-dark:#0b0c2a;
-  --cyan:#00ffff;
+  --bg:#0a0f2c;
+  --glass:rgba(255,255,255,0.08);
+  --neon:#00ffff;
 }
-
-*{margin:0;padding:0;box-sizing:border-box;}
 
 body{
-  font-family:Arial, sans-serif;
-  background:var(--bg-dark);
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#0a0f2c,#1a1f4c);
   color:white;
+}
+
+header{
   display:flex;
-  overflow-x:hidden;
+  justify-content:space-between;
+  padding:15px 30px;
+  backdrop-filter:blur(10px);
+  background:var(--glass);
+  border-bottom:1px solid var(--neon);
 }
 
-/* ================= SIDEBAR ================= */
-.sidebar{
-  width:220px;
-  height:100vh;
-  background:#050617;
-  padding:25px 15px;
-  position:fixed;
-  left:-220px;
-  top:0;
-  transition:0.6s ease;
-  z-index:5;
-}
-.sidebar.open{left:0;}
-
-.sidebar h2{
-  color:var(--cyan);
-  margin-bottom:30px;
-  text-align:center;
-}
-
-.sidebar ul{list-style:none;}
-
-.sidebar li{
-  padding:12px;
-  margin-bottom:10px;
+button{
+  background:var(--neon);
+  border:none;
+  padding:6px 12px;
   border-radius:8px;
   cursor:pointer;
-  transition:0.3s;
+  font-weight:bold;
+  margin-left:5px;
 }
 
-.sidebar li:hover{
-  background:var(--cyan);
-  color:black;
-  transform:translateX(5px);
-}
-
-/* ================= ENERGY LINE ================= */
-.energy-line{
-  position:fixed;
-  left:0;
-  top:0;
-  width:4px;
-  height:100vh;
-  background:rgba(0,255,255,0.2);
-  overflow:hidden;
-  z-index:10;
-}
-
-.energy-line::before{
-  content:"";
-  position:absolute;
-  width:100%;
-  height:200%;
-  background:linear-gradient(to bottom, transparent, white, transparent);
-  animation:flow 2s linear infinite;
-}
-
-@keyframes flow{
-  0%{top:-100%;}
-  100%{top:100%;}
-}
-
-/* ================= MENU ARROWS ================= */
-.menu-control{
-  position:fixed;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  width:60px;
-  height:120px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:20;
-  cursor:pointer;
-}
-
-.arrows{
-  position:relative;
-  width:30px;
-  height:60px;
-}
-
-.arrow{
-  width:20px;
-  height:20px;
-  border-left:3px solid white;
-  border-bottom:3px solid white;
-  position:absolute;
-  left:5px;
-  transition:0.6s;
-}
-
-.arrow.up{transform:rotate(135deg); top:20px;}
-.arrow.down{transform:rotate(-45deg); top:35px;}
-
-.menu-control.active .arrow.up{top:-10px;}
-.menu-control.active .arrow.down{top:60px;}
-
-.dots{
-  position:absolute;
-  width:2px;
-  height:100%;
-  left:14px;
-  background:repeating-linear-gradient(to bottom, white 0px, white 4px, transparent 4px, transparent 8px);
-  opacity:0;
-  transition:0.6s;
-}
-
-.menu-control.active .dots{opacity:1;}
-
-/* ================= MAIN ================= */
-.main{
-  margin-left:0;
-  width:100%;
-  transition:0.6s;
-}
-
-.sidebar.open ~ .main{margin-left:220px;}
-
-/* ================= HEADER ================= */
-.top-header{
-  height:70px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 20px;
-  border-bottom:1px solid var(--cyan);
-}
-
-.logo-small{color:var(--cyan); font-weight:bold;}
-
-.search-bar input{
-  padding:8px;
-  border-radius:6px;
-  border:none;
-}
-
-/* ================= CATEGORY ================= */
-.category-wrapper{
-  background:#111;
-  padding:10px;
-}
-
-.category-bar{
-  display:flex;
-  gap:20px;
-  overflow-x:auto;
-}
-
-.category-item{
-  padding:8px 16px;
-  border:1px solid var(--cyan);
-  border-radius:20px;
-  cursor:pointer;
-}
-
-.ghost-track{
-  height:50px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-}
-
-.ghost-path{
-  position:absolute;
-  width:60%;
-  height:20px;
-  border-radius:40px;
-  border:2px solid var(--cyan);
-}
-
-.ghost-indicator{
-  position:absolute;
-  padding:5px 15px;
-  background:rgba(0,255,255,0.2);
-  border-radius:30px;
-  transition:0.4s;
-  max-width:200px;
-  text-align:center;
-}
-
-/* ================= LOGO ================= */
-#nexora-logo{
-  display:flex;
-  justify-content:center;
-  font-size:60px;
-  margin:60px 0;
-}
-
-/* ================= BOOK GRID ================= */
-.book-container{
+.container{
+  padding:20px;
   display:flex;
   flex-wrap:wrap;
-  justify-content:center;
-  gap:25px;
-  padding:30px;
+  gap:20px;
 }
 
-.book-card{
-  width:180px;
-  background:#111;
+.card{
+  width:220px;
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--neon);
   border-radius:15px;
-  border:2px solid var(--cyan);
-  overflow:hidden;
-  transition:0.4s;
-  cursor:pointer;
-  text-align:center;
-}
-
-.book-card img{
-  width:100%;
-  height:240px;
-  object-fit:cover;
-}
-
-.book-card h3{padding:10px 0;}
-
-.buy-btn{
-  display:block;
-  text-align:center;
-  margin:10px auto 20px auto;
-  padding:8px 15px;
-  background:var(--cyan);
-  color:black;
-  border-radius:12px;
-  font-weight:bold;
-  text-decoration:none;
+  padding:10px;
   transition:0.3s;
 }
 
-.buy-btn:hover{
-  background:#00ffffcc;
-  transform:scale(1.05);
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 0 15px var(--neon);
+}
+
+input, select{
+  padding:6px;
+  margin:5px 0;
+  border-radius:6px;
+  border:none;
+  width:100%;
+}
+
+.modal{
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-content{
+  background:#111;
+  padding:20px;
+  width:300px;
+  border:2px solid var(--neon);
+  border-radius:10px;
+}
+
+.profile-box{
+  padding:15px;
+  border:1px solid var(--neon);
+  margin:10px 0;
 }
 
 </style>
 </head>
-
 <body>
 
-<div class="energy-line"></div>
+<header>
+  <div>NEXORA</div>
+  <div>
+    <button onclick="openAuth()">Login/Register</button>
+    <button onclick="openAddProduct()">+ Product</button>
+    <button onclick="openProfile()">Profile</button>
+  </div>
+</header>
 
-<div class="menu-control" id="menuControl">
-  <div class="arrows">
-    <div class="arrow up"></div>
-    <div class="dots"></div>
-    <div class="arrow down"></div>
+<div style="padding:10px;">
+  <input id="search" placeholder="Search...">
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+    <option value="AI">AI</option>
+    <option value="Sci-Fi">Sci-Fi</option>
+    <option value="Research">Research</option>
+  </select>
+</div>
+
+<div class="container" id="productContainer"></div>
+
+<!-- AUTH MODAL -->
+<div class="modal" id="authModal">
+  <div class="modal-content">
+    <h3>Login / Register</h3>
+    <input id="authUser" placeholder="Username">
+    <input id="authPass" type="password" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <button onclick="login()">Login</button>
   </div>
 </div>
 
-<div class="sidebar" id="sidebar">
-  <h2>NEXORA</h2>
-  <ul>
-    <li>Dashboard</li>
-    <li>Explore</li>
-    <li>Library</li>
-    <li>AI Assistant</li>
-    <li>Settings</li>
-  </ul>
-</div>
-
-<div class="main">
-
-<div class="top-header">
-  <div class="logo-small">NEXORA</div>
-  <div class="search-bar">
-    <input placeholder="Search books...">
+<!-- PRODUCT MODAL -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <h3>Add Product</h3>
+    <input id="title" placeholder="Title">
+    <input id="price" placeholder="Price">
+    <select id="category">
+      <option value="AI">AI</option>
+      <option value="Sci-Fi">Sci-Fi</option>
+      <option value="Research">Research</option>
+    </select>
+    <input id="desc" placeholder="Description">
+    <button onclick="generateAI()">Generate AI Description</button>
+    <button onclick="saveProduct()">Save</button>
   </div>
 </div>
 
-<div class="category-wrapper">
-  <div class="category-bar">
-    <div class="category-item">AI Books</div>
-    <div class="category-item">Science Fiction</div>
-    <div class="category-item">Action</div>
-    <div class="category-item">Roman</div>
-    <div class="category-item">Deep Research</div>
-  </div>
-
-  <div class="ghost-track">
-    <div class="ghost-path"></div>
-    <div class="ghost-indicator" id="ghost">Hover</div>
+<!-- PROFILE MODAL -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+    <h3>Profile</h3>
+    <div id="profileInfo"></div>
   </div>
 </div>
 
-<div id="nexora-logo">NEXORA</div>
-
-<!-- ================= BOOK GRID ================= -->
-<div class="book-container">
-  <div class="book-card">
-    <img src="https://via.placeholder.com/150x220?text=Quantum+AI">
-    <h3>Quantum AI</h3>
-    <a href="https://nexoraworld.lemonsqueezy.com/checkout/buy/a1f81cf8-2710-4f65-97af-dd5440337016" target="_blank" class="buy-btn">Satın Al</a>
-  </div>
-  <div class="book-card">
-    <img src="https://via.placeholder.com/150x220?text=Future+Mars">
-    <h3>Future Mars</h3>
-    <a href="#" target="_blank" class="buy-btn">Satın Al</a>
-  </div>
-  <div class="book-card">
-    <img src="https://via.placeholder.com/150x220?text=AI+Revolution">
-    <h3>AI Revolution</h3>
-    <a href="#" target="_blank" class="buy-btn">Satın Al</a>
-  </div>
+<!-- API KEY INPUT -->
+<div style="position:fixed;bottom:10px;right:10px;background:#111;padding:10px;border:1px solid cyan;">
+  <input id="apiKeyInput" placeholder="Enter OpenAI API Key">
+  <button onclick="saveApiKey()">Save Key</button>
 </div>
 
 <script>
 
-/* SIDEBAR CONTROL */
-const menuControl=document.getElementById("menuControl");
-const sidebar=document.getElementById("sidebar");
+/* STATE */
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let currentUser = localStorage.getItem("currentUser");
 
-menuControl.addEventListener("click",()=>{
-  menuControl.classList.toggle("active");
-  sidebar.classList.toggle("open");
-});
+/* SAVE API KEY */
+function saveApiKey(){
+  const key=document.getElementById("apiKeyInput").value;
+  localStorage.setItem("openai_key",key);
+  alert("API Key saved locally.");
+}
 
-/* GHOST FIXED */
-const categories=document.querySelectorAll('.category-item');
-const ghost=document.getElementById('ghost');
-const path=document.querySelector('.ghost-path');
+/* AUTH SYSTEM */
+function openAuth(){ document.getElementById("authModal").style.display="flex"; }
 
-categories.forEach(cat=>{
-  cat.addEventListener('mouseenter',()=>{
-    ghost.textContent=cat.textContent;
-    const rect=cat.getBoundingClientRect();
-    const pathRect=path.getBoundingClientRect();
-    let pos=rect.left+rect.width/2 - pathRect.left - ghost.offsetWidth/2;
-    if(pos<0) pos=0;
-    if(pos>pathRect.width-ghost.offsetWidth)
-      pos=pathRect.width-ghost.offsetWidth;
-    ghost.style.left=pos+'px';
+function register(){
+  const u=authUser.value;
+  const p=authPass.value;
+  if(!u || !p) return alert("Fill all fields");
+  users.push({username:u,password:p,followers:[],following:[]});
+  localStorage.setItem("users",JSON.stringify(users));
+  alert("Registered!");
+}
+
+function login(){
+  const u=authUser.value;
+  const p=authPass.value;
+  const user=users.find(x=>x.username===u && x.password===p);
+  if(user){
+    currentUser=u;
+    localStorage.setItem("currentUser",u);
+    alert("Logged in");
+  } else alert("Wrong credentials");
+}
+
+/* PRODUCT SYSTEM */
+function openAddProduct(){
+  if(!currentUser) return alert("Login first");
+  document.getElementById("productModal").style.display="flex";
+}
+
+function saveProduct(){
+  const product={
+    id:Date.now(),
+    title:title.value,
+    price:price.value,
+    category:category.value,
+    desc:desc.value,
+    owner:currentUser
+  };
+  products.push(product);
+  localStorage.setItem("products",JSON.stringify(products));
+  renderProducts();
+  productModal.style.display="none";
+}
+
+function deleteProduct(id){
+  products=products.filter(p=>p.id!==id);
+  localStorage.setItem("products",JSON.stringify(products));
+  renderProducts();
+}
+
+function renderProducts(){
+  const container=document.getElementById("productContainer");
+  container.innerHTML="";
+  const searchVal=search.value.toLowerCase();
+  const catVal=categoryFilter.value;
+
+  products.forEach(p=>{
+    if(
+      (catVal==="all"||p.category===catVal) &&
+      p.title.toLowerCase().includes(searchVal)
+    ){
+      container.innerHTML+=`
+      <div class="card">
+        <h4>${p.title}</h4>
+        <p>${p.price}</p>
+        <p>${p.category}</p>
+        <p>${p.desc}</p>
+        ${p.owner===currentUser ? `<button onclick="deleteProduct(${p.id})">Delete</button>` : ""}
+      </div>`;
+    }
   });
-});
+}
+
+/* PROFILE */
+function openProfile(){
+  if(!currentUser) return alert("Login first");
+  document.getElementById("profileModal").style.display="flex";
+  const user=users.find(u=>u.username===currentUser);
+  profileInfo.innerHTML=`
+    <div class="profile-box">
+      Username: ${user.username}<br>
+      Followers: ${user.followers.length}<br>
+      Following: ${user.following.length}
+    </div>
+  `;
+}
+
+/* AI INTEGRATION */
+async function generateAI(){
+  const apiKey=localStorage.getItem("openai_key");
+  if(!apiKey) return alert("Enter API key first");
+
+  const response=await fetch("https://api.openai.com/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+apiKey
+    },
+    body:JSON.stringify({
+      model:"gpt-4o-mini",
+      messages:[{role:"user",content:"Write a futuristic product description for "+title.value}]
+    })
+  });
+
+  const data=await response.json();
+  desc.value=data.choices[0].message.content;
+}
+
+search.onkeyup=renderProducts;
+categoryFilter.onchange=renderProducts;
+
+renderProducts();
 
 </script>
-
 </body>
 </html>
