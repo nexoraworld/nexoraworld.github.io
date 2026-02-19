@@ -3,96 +3,132 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v5.1 Quantum</title>
+<title>NEXORA v6 Quantum Elite</title>
 
 <style>
 :root{
-  --bg-light:#f6f2e8;
-  --bg-dark:#0f0f14;
-  --text-light:#111;
-  --text-dark:#fff;
   --accent:#00f2ff;
+  --dark:#0f0f14;
+  --light:#f6f2e8;
 }
 
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  transition:0.4s;
+  font-family:Arial;
+  background:var(--dark);
+  color:#fff;
   overflow-x:hidden;
+  transition:0.4s;
 }
 
-body.light{
-  background:var(--bg-light);
-  color:var(--text-light);
-}
+/* ================= NEON MOVING LINES ================= */
 
-body.dark{
-  background:var(--bg-dark);
-  color:var(--text-dark);
-}
-
-/* Neon Lines */
 .neon-line{
   position:fixed;
   width:100%;
   height:2px;
   background:linear-gradient(90deg,transparent,var(--accent),transparent);
-  animation:neonMove 3s linear infinite;
-}
-.neon-line.top{top:0;}
-.neon-line.bottom{bottom:0;}
-
-@keyframes neonMove{
-  0%{background-position:-500px}
-  100%{background-position:500px}
+  background-size:300px;
+  animation:moveLine 3s linear infinite;
+  z-index:999;
 }
 
-/* Sidebar */
+.neon-top{top:0;}
+.neon-bottom{bottom:0;}
+
+@keyframes moveLine{
+  0%{background-position:-300px}
+  100%{background-position:300px}
+}
+
+/* ================= SIDEBAR ================= */
+
 .sidebar{
   position:fixed;
-  left:0;
   top:0;
-  height:100%;
-  width:220px;
+  left:0;
+  width:100%;
+  height:220px;
   background:#111;
-  transition:0.4s;
-  padding-top:60px;
+  transition:0.5s ease;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid var(--accent);
 }
 
 .sidebar.collapsed{
-  width:60px;
+  height:80px;
 }
 
-.toggle-arrow{
-  position:absolute;
-  top:10px;
-  right:-15px;
-  background:#00f2ff;
-  border-radius:50%;
-  width:30px;
-  height:30px;
-  cursor:pointer;
+.sidebar h1{
+  margin:0;
+  color:var(--accent);
+  letter-spacing:3px;
+}
+
+/* ================= DUAL ARROW DIVIDER ================= */
+
+.divider{
+  margin-top:20px;
   display:flex;
   align-items:center;
-  justify-content:center;
-  color:#000;
-  font-weight:bold;
+  gap:15px;
+  cursor:pointer;
+  transition:0.3s;
 }
 
-/* Content */
+.divider:hover{
+  transform:scale(1.1);
+}
+
+.arrow{
+  font-size:22px;
+  transition:0.3s;
+}
+
+.divider:hover .arrow{
+  color:var(--accent);
+  text-shadow:0 0 15px var(--accent);
+}
+
+/* Dotted Glow Line */
+.dots{
+  width:150px;
+  height:4px;
+  background:repeating-linear-gradient(
+    90deg,
+    var(--accent),
+    var(--accent) 5px,
+    transparent 5px,
+    transparent 12px
+  );
+  animation:pulseDots 2s infinite;
+}
+
+@keyframes pulseDots{
+  0%{opacity:0.4}
+  50%{opacity:1}
+  100%{opacity:0.4}
+}
+
+/* ================= CONTENT ================= */
+
 .content{
-  margin-left:220px;
+  margin-top:220px;
   padding:40px;
-  transition:0.4s;
+  transition:0.5s;
 }
 
-.sidebar.collapsed + .content{
-  margin-left:60px;
+.sidebar.collapsed ~ .content{
+  margin-top:80px;
 }
 
-/* Buttons */
+/* ================= BUTTONS ================= */
+
 .glow-btn{
-  padding:15px 25px;
+  padding:15px 30px;
   border:none;
   border-radius:30px;
   background:#111;
@@ -104,60 +140,66 @@ body.dark{
 }
 
 .glow-btn:hover{
-  box-shadow:0 0 25px var(--accent);
+  box-shadow:0 0 30px var(--accent);
   transform:scale(1.05);
 }
 
-/* Theme Button */
+/* ================= THEME TOGGLE ================= */
+
 .theme-toggle{
   position:fixed;
-  bottom:20px;
-  right:20px;
+  bottom:30px;
+  right:30px;
   width:60px;
   height:60px;
   border-radius:50%;
   border:none;
-  font-size:22px;
+  font-size:24px;
   cursor:pointer;
   box-shadow:0 0 20px var(--accent);
 }
 
-/* Page Overlay */
-.page{
-  display:none;
-}
-.page.active{
-  display:block;
-}
+/* ================= PAGES ================= */
+
+.page{display:none;}
+.page.active{display:block;}
 
 </style>
 </head>
-<body class="dark">
+<body>
 
-<div class="neon-line top"></div>
-<div class="neon-line bottom"></div>
+<div class="neon-line neon-top"></div>
+<div class="neon-line neon-bottom"></div>
 
 <div class="sidebar" id="sidebar">
-  <div class="toggle-arrow" onclick="toggleSidebar()">❮</div>
+
+<h1>NEXORA</h1>
+
+<div class="divider" onclick="toggleSidebar()">
+  <div class="arrow" id="upArrow">▲</div>
+  <div class="dots"></div>
+  <div class="arrow" id="downArrow">▼</div>
 </div>
 
-<div class="content" id="content">
+</div>
 
-  <div id="home" class="page active">
-    <h1>🚀 NEXORA Quantum</h1>
-    <button class="glow-btn" onclick="openPage('panel1')">Panel 1</button>
-    <button class="glow-btn" onclick="openPage('panel2')">Panel 2</button>
-  </div>
+<div class="content">
 
-  <div id="panel1" class="page">
-    <h2>Panel 1 Ekranı</h2>
-    <button class="glow-btn" onclick="goBack()">Geri</button>
-  </div>
+<div id="home" class="page active">
+  <h2>Quantum Core Active</h2>
+  <button class="glow-btn" onclick="openPage('panel1')">Panel 1</button>
+  <button class="glow-btn" onclick="openPage('panel2')">Panel 2</button>
+</div>
 
-  <div id="panel2" class="page">
-    <h2>Panel 2 Ekranı</h2>
-    <button class="glow-btn" onclick="goBack()">Geri</button>
-  </div>
+<div id="panel1" class="page">
+  <h2>Panel 1</h2>
+  <button class="glow-btn" onclick="goBack()">Geri</button>
+</div>
+
+<div id="panel2" class="page">
+  <h2>Panel 2</h2>
+  <button class="glow-btn" onclick="goBack()">Geri</button>
+</div>
 
 </div>
 
@@ -165,21 +207,20 @@ body.dark{
 
 <script>
 
-/* Sidebar Toggle */
+/* SIDEBAR TOGGLE */
 function toggleSidebar(){
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-/* Theme Switch */
+/* THEME SWITCH */
 function toggleTheme(){
-  let body=document.body;
-  body.classList.toggle("light");
-  body.classList.toggle("dark");
+  document.body.classList.toggle("light");
+  document.body.classList.toggle("dark");
   let btn=document.getElementById("themeBtn");
-  btn.textContent=body.classList.contains("dark")?"🌙":"☀";
+  btn.textContent=document.body.classList.contains("dark")?"🌙":"☀";
 }
 
-/* Page Navigation */
+/* PAGE SYSTEM */
 function openPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -190,8 +231,8 @@ function goBack(){
   history.back();
 }
 
-/* Back Button Fix */
-window.addEventListener("popstate",function(event){
+/* BACK FIX */
+window.addEventListener("popstate",function(){
   let page=location.hash.replace("#","");
   if(page){
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -202,7 +243,7 @@ window.addEventListener("popstate",function(event){
   }
 });
 
-/* Prevent Exit */
+/* Prevent full exit */
 history.pushState(null,"",location.href);
 window.addEventListener("popstate",function(){
   history.pushState(null,"",location.href);
