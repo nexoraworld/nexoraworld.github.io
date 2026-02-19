@@ -2,70 +2,120 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Nexora v4</title>
+<title>NexoraBooks 2050 - Quantum Core</title>
+
 <style>
 
+/* =========================
+   GLOBAL STYLE
+========================= */
+
 :root{
-  --bg:#0a0f2c;
-  --glass:rgba(255,255,255,0.08);
-  --neon:#00ffff;
+  --bg1:#0f0c29;
+  --bg2:#302b63;
+  --bg3:#24243e;
+  --neon:#00f5ff;
+  --glass:rgba(255,255,255,0.07);
 }
 
 body{
   margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#0a0f2c,#1a1f4c);
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
   color:white;
+  overflow-x:hidden;
 }
 
-header{
-  display:flex;
-  justify-content:space-between;
-  padding:15px 30px;
-  backdrop-filter:blur(10px);
-  background:var(--glass);
-  border-bottom:1px solid var(--neon);
-}
+/* =========================
+   SIDEBAR
+========================= */
 
-button{
-  background:var(--neon);
-  border:none;
-  padding:6px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-  margin-left:5px;
-}
-
-.container{
-  padding:20px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:20px;
-}
-
-.card{
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
   width:220px;
-  background:var(--glass);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--neon);
-  border-radius:15px;
-  padding:10px;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(12px);
+  border-right:1px solid var(--neon);
+  padding-top:20px;
+  transition:0.4s;
+}
+
+.sidebar h2{
+  text-align:center;
+  color:var(--neon);
+}
+
+.sidebar ul{
+  list-style:none;
+  padding:0;
+}
+
+.sidebar li{
+  padding:15px;
+  cursor:pointer;
   transition:0.3s;
 }
 
-.card:hover{
-  transform:translateY(-5px);
-  box-shadow:0 0 15px var(--neon);
+.sidebar li:hover{
+  background:var(--neon);
+  color:black;
+  transform:translateX(5px);
+}
+
+/* =========================
+   MAIN AREA
+========================= */
+
+.main{
+  margin-left:220px;
+  padding:20px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 input, select{
   padding:6px;
-  margin:5px 0;
   border-radius:6px;
   border:none;
-  width:100%;
 }
+
+/* =========================
+   PRODUCT GRID
+========================= */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:20px;
+  margin-top:20px;
+}
+
+/* Grid (Izgara Sistemi) → Elemanları satır-sütun şeklinde dizer */
+
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--neon);
+  border-radius:15px;
+  padding:15px;
+  transition:0.4s;
+}
+
+.card:hover{
+  transform:translateY(-10px) scale(1.03);
+  box-shadow:0 0 20px var(--neon);
+}
+
+/* =========================
+   MODAL
+========================= */
 
 .modal{
   position:fixed;
@@ -73,8 +123,8 @@ input, select{
   height:100%;
   background:rgba(0,0,0,0.8);
   display:none;
-  align-items:center;
   justify-content:center;
+  align-items:center;
 }
 
 .modal-content{
@@ -85,43 +135,72 @@ input, select{
   border-radius:10px;
 }
 
-.profile-box{
-  padding:15px;
+/* =========================
+   API PANEL
+========================= */
+
+.api-panel{
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  background:#111;
+  padding:10px;
   border:1px solid var(--neon);
-  margin:10px 0;
+  border-radius:8px;
+}
+
+button{
+  background:var(--neon);
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
 }
 
 </style>
 </head>
 <body>
 
-<header>
-  <div>NEXORA</div>
-  <div>
-    <button onclick="openAuth()">Login/Register</button>
-    <button onclick="openAddProduct()">+ Product</button>
-    <button onclick="openProfile()">Profile</button>
-  </div>
-</header>
-
-<div style="padding:10px;">
-  <input id="search" placeholder="Search...">
-  <select id="categoryFilter">
-    <option value="all">All Categories</option>
-    <option value="AI">AI</option>
-    <option value="Sci-Fi">Sci-Fi</option>
-    <option value="Research">Research</option>
-  </select>
+<div class="sidebar">
+  <h2>NEXORA</h2>
+  <ul>
+    <li>Dashboard</li>
+    <li>Explore</li>
+    <li>Library</li>
+    <li>AI Assistant</li>
+    <li>Settings</li>
+  </ul>
 </div>
 
-<div class="container" id="productContainer"></div>
+<div class="main">
+
+<div class="topbar">
+  <div>
+    <input id="search" placeholder="Search books...">
+    <select id="categoryFilter">
+      <option value="all">All</option>
+      <option value="AI">AI</option>
+      <option value="Sci-Fi">Sci-Fi</option>
+      <option value="Research">Research</option>
+    </select>
+  </div>
+  <div>
+    <button onclick="openAuth()">Login</button>
+    <button onclick="openAdd()">+ Add</button>
+  </div>
+</div>
+
+<div class="grid" id="productGrid"></div>
+
+</div>
 
 <!-- AUTH MODAL -->
 <div class="modal" id="authModal">
   <div class="modal-content">
     <h3>Login / Register</h3>
-    <input id="authUser" placeholder="Username">
-    <input id="authPass" type="password" placeholder="Password">
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
     <button onclick="register()">Register</button>
     <button onclick="login()">Login</button>
   </div>
@@ -139,66 +218,47 @@ input, select{
       <option value="Research">Research</option>
     </select>
     <input id="desc" placeholder="Description">
-    <button onclick="generateAI()">Generate AI Description</button>
     <button onclick="saveProduct()">Save</button>
   </div>
 </div>
 
-<!-- PROFILE MODAL -->
-<div class="modal" id="profileModal">
-  <div class="modal-content">
-    <h3>Profile</h3>
-    <div id="profileInfo"></div>
-  </div>
-</div>
-
-<!-- API KEY INPUT -->
-<div style="position:fixed;bottom:10px;right:10px;background:#111;padding:10px;border:1px solid cyan;">
-  <input id="apiKeyInput" placeholder="Enter OpenAI API Key">
-  <button onclick="saveApiKey()">Save Key</button>
+<!-- API PANEL -->
+<div class="api-panel">
+  <input id="apiKeyInput" placeholder="OpenAI API Key">
+  <button onclick="saveApi()">Save</button>
 </div>
 
 <script>
 
-/* STATE */
+/* STATE (Uygulama Durumu) */
 let users = JSON.parse(localStorage.getItem("users")) || [];
 let products = JSON.parse(localStorage.getItem("products")) || [];
 let currentUser = localStorage.getItem("currentUser");
 
-/* SAVE API KEY */
-function saveApiKey(){
-  const key=document.getElementById("apiKeyInput").value;
-  localStorage.setItem("openai_key",key);
-  alert("API Key saved locally.");
+/* AUTH */
+function openAuth(){
+  authModal.style.display="flex";
 }
 
-/* AUTH SYSTEM */
-function openAuth(){ document.getElementById("authModal").style.display="flex"; }
-
 function register(){
-  const u=authUser.value;
-  const p=authPass.value;
-  if(!u || !p) return alert("Fill all fields");
-  users.push({username:u,password:p,followers:[],following:[]});
+  users.push({username:username.value,password:password.value});
   localStorage.setItem("users",JSON.stringify(users));
-  alert("Registered!");
+  alert("Registered");
 }
 
 function login(){
-  const u=authUser.value;
-  const p=authPass.value;
-  const user=users.find(x=>x.username===u && x.password===p);
+  const user=users.find(u=>u.username===username.value && u.password===password.value);
   if(user){
-    currentUser=u;
-    localStorage.setItem("currentUser",u);
+    currentUser=user.username;
+    localStorage.setItem("currentUser",currentUser);
     alert("Logged in");
-  } else alert("Wrong credentials");
+  }else alert("Wrong info");
 }
 
-/* PRODUCT SYSTEM */
-function openAddProduct(){
+/* PRODUCT */
+function openAdd(){
   if(!currentUser) return alert("Login first");
-  document.getElementById("productModal").style.display="flex";
+  productModal.style.display="flex";
 }
 
 function saveProduct(){
@@ -223,8 +283,7 @@ function deleteProduct(id){
 }
 
 function renderProducts(){
-  const container=document.getElementById("productContainer");
-  container.innerHTML="";
+  productGrid.innerHTML="";
   const searchVal=search.value.toLowerCase();
   const catVal=categoryFilter.value;
 
@@ -233,57 +292,28 @@ function renderProducts(){
       (catVal==="all"||p.category===catVal) &&
       p.title.toLowerCase().includes(searchVal)
     ){
-      container.innerHTML+=`
-      <div class="card">
-        <h4>${p.title}</h4>
-        <p>${p.price}</p>
-        <p>${p.category}</p>
-        <p>${p.desc}</p>
-        ${p.owner===currentUser ? `<button onclick="deleteProduct(${p.id})">Delete</button>` : ""}
-      </div>`;
+      productGrid.innerHTML+=`
+        <div class="card">
+          <h4>${p.title}</h4>
+          <p>${p.price}</p>
+          <p>${p.category}</p>
+          <p>${p.desc}</p>
+          ${p.owner===currentUser?`<button onclick="deleteProduct(${p.id})">Delete</button>`:""}
+        </div>
+      `;
     }
   });
 }
 
-/* PROFILE */
-function openProfile(){
-  if(!currentUser) return alert("Login first");
-  document.getElementById("profileModal").style.display="flex";
-  const user=users.find(u=>u.username===currentUser);
-  profileInfo.innerHTML=`
-    <div class="profile-box">
-      Username: ${user.username}<br>
-      Followers: ${user.followers.length}<br>
-      Following: ${user.following.length}
-    </div>
-  `;
-}
-
-/* AI INTEGRATION */
-async function generateAI(){
-  const apiKey=localStorage.getItem("openai_key");
-  if(!apiKey) return alert("Enter API key first");
-
-  const response=await fetch("https://api.openai.com/v1/chat/completions",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+apiKey
-    },
-    body:JSON.stringify({
-      model:"gpt-4o-mini",
-      messages:[{role:"user",content:"Write a futuristic product description for "+title.value}]
-    })
-  });
-
-  const data=await response.json();
-  desc.value=data.choices[0].message.content;
-}
-
 search.onkeyup=renderProducts;
 categoryFilter.onchange=renderProducts;
-
 renderProducts();
+
+/* API SAVE */
+function saveApi(){
+  localStorage.setItem("openai_key",apiKeyInput.value);
+  alert("API Key saved locally");
+}
 
 </script>
 </body>
