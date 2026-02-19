@@ -1,320 +1,214 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>NexoraBooks 2050 - Quantum Core</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXORA v5.1 Quantum</title>
 
 <style>
-
-/* =========================
-   GLOBAL STYLE
-========================= */
-
 :root{
-  --bg1:#0f0c29;
-  --bg2:#302b63;
-  --bg3:#24243e;
-  --neon:#00f5ff;
-  --glass:rgba(255,255,255,0.07);
+  --bg-light:#f6f2e8;
+  --bg-dark:#0f0f14;
+  --text-light:#111;
+  --text-dark:#fff;
+  --accent:#00f2ff;
 }
 
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
-  color:white;
+  transition:0.4s;
   overflow-x:hidden;
 }
 
-/* =========================
-   SIDEBAR
-========================= */
+body.light{
+  background:var(--bg-light);
+  color:var(--text-light);
+}
 
+body.dark{
+  background:var(--bg-dark);
+  color:var(--text-dark);
+}
+
+/* Neon Lines */
+.neon-line{
+  position:fixed;
+  width:100%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:neonMove 3s linear infinite;
+}
+.neon-line.top{top:0;}
+.neon-line.bottom{bottom:0;}
+
+@keyframes neonMove{
+  0%{background-position:-500px}
+  100%{background-position:500px}
+}
+
+/* Sidebar */
 .sidebar{
   position:fixed;
   left:0;
   top:0;
+  height:100%;
   width:220px;
-  height:100%;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(12px);
-  border-right:1px solid var(--neon);
-  padding-top:20px;
+  background:#111;
   transition:0.4s;
+  padding-top:60px;
 }
 
-.sidebar h2{
-  text-align:center;
-  color:var(--neon);
+.sidebar.collapsed{
+  width:60px;
 }
 
-.sidebar ul{
-  list-style:none;
-  padding:0;
-}
-
-.sidebar li{
-  padding:15px;
+.toggle-arrow{
+  position:absolute;
+  top:10px;
+  right:-15px;
+  background:#00f2ff;
+  border-radius:50%;
+  width:30px;
+  height:30px;
   cursor:pointer;
-  transition:0.3s;
-}
-
-.sidebar li:hover{
-  background:var(--neon);
-  color:black;
-  transform:translateX(5px);
-}
-
-/* =========================
-   MAIN AREA
-========================= */
-
-.main{
-  margin-left:220px;
-  padding:20px;
-}
-
-.topbar{
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:center;
+  color:#000;
+  font-weight:bold;
 }
 
-input, select{
-  padding:6px;
-  border-radius:6px;
-  border:none;
-}
-
-/* =========================
-   PRODUCT GRID
-========================= */
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:20px;
-  margin-top:20px;
-}
-
-/* Grid (Izgara Sistemi) → Elemanları satır-sütun şeklinde dizer */
-
-.card{
-  background:var(--glass);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--neon);
-  border-radius:15px;
-  padding:15px;
+/* Content */
+.content{
+  margin-left:220px;
+  padding:40px;
   transition:0.4s;
 }
 
-.card:hover{
-  transform:translateY(-10px) scale(1.03);
-  box-shadow:0 0 20px var(--neon);
+.sidebar.collapsed + .content{
+  margin-left:60px;
 }
 
-/* =========================
-   MODAL
-========================= */
-
-.modal{
-  position:fixed;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.8);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal-content{
-  background:#111;
-  padding:20px;
-  width:300px;
-  border:2px solid var(--neon);
-  border-radius:10px;
-}
-
-/* =========================
-   API PANEL
-========================= */
-
-.api-panel{
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  background:#111;
-  padding:10px;
-  border:1px solid var(--neon);
-  border-radius:8px;
-}
-
-button{
-  background:var(--neon);
+/* Buttons */
+.glow-btn{
+  padding:15px 25px;
   border:none;
-  padding:6px 10px;
-  border-radius:6px;
+  border-radius:30px;
+  background:#111;
+  color:#fff;
   cursor:pointer;
-  font-weight:bold;
+  margin:10px;
+  transition:0.3s;
+  box-shadow:0 0 10px var(--accent);
+}
+
+.glow-btn:hover{
+  box-shadow:0 0 25px var(--accent);
+  transform:scale(1.05);
+}
+
+/* Theme Button */
+.theme-toggle{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  border:none;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:0 0 20px var(--accent);
+}
+
+/* Page Overlay */
+.page{
+  display:none;
+}
+.page.active{
+  display:block;
 }
 
 </style>
 </head>
-<body>
+<body class="dark">
 
-<div class="sidebar">
-  <h2>NEXORA</h2>
-  <ul>
-    <li>Dashboard</li>
-    <li>Explore</li>
-    <li>Library</li>
-    <li>AI Assistant</li>
-    <li>Settings</li>
-  </ul>
+<div class="neon-line top"></div>
+<div class="neon-line bottom"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="toggle-arrow" onclick="toggleSidebar()">❮</div>
 </div>
 
-<div class="main">
+<div class="content" id="content">
 
-<div class="topbar">
-  <div>
-    <input id="search" placeholder="Search books...">
-    <select id="categoryFilter">
-      <option value="all">All</option>
-      <option value="AI">AI</option>
-      <option value="Sci-Fi">Sci-Fi</option>
-      <option value="Research">Research</option>
-    </select>
+  <div id="home" class="page active">
+    <h1>🚀 NEXORA Quantum</h1>
+    <button class="glow-btn" onclick="openPage('panel1')">Panel 1</button>
+    <button class="glow-btn" onclick="openPage('panel2')">Panel 2</button>
   </div>
-  <div>
-    <button onclick="openAuth()">Login</button>
-    <button onclick="openAdd()">+ Add</button>
+
+  <div id="panel1" class="page">
+    <h2>Panel 1 Ekranı</h2>
+    <button class="glow-btn" onclick="goBack()">Geri</button>
   </div>
-</div>
 
-<div class="grid" id="productGrid"></div>
-
-</div>
-
-<!-- AUTH MODAL -->
-<div class="modal" id="authModal">
-  <div class="modal-content">
-    <h3>Login / Register</h3>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="register()">Register</button>
-    <button onclick="login()">Login</button>
+  <div id="panel2" class="page">
+    <h2>Panel 2 Ekranı</h2>
+    <button class="glow-btn" onclick="goBack()">Geri</button>
   </div>
+
 </div>
 
-<!-- PRODUCT MODAL -->
-<div class="modal" id="productModal">
-  <div class="modal-content">
-    <h3>Add Product</h3>
-    <input id="title" placeholder="Title">
-    <input id="price" placeholder="Price">
-    <select id="category">
-      <option value="AI">AI</option>
-      <option value="Sci-Fi">Sci-Fi</option>
-      <option value="Research">Research</option>
-    </select>
-    <input id="desc" placeholder="Description">
-    <button onclick="saveProduct()">Save</button>
-  </div>
-</div>
-
-<!-- API PANEL -->
-<div class="api-panel">
-  <input id="apiKeyInput" placeholder="OpenAI API Key">
-  <button onclick="saveApi()">Save</button>
-</div>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <script>
 
-/* STATE (Uygulama Durumu) */
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let products = JSON.parse(localStorage.getItem("products")) || [];
-let currentUser = localStorage.getItem("currentUser");
-
-/* AUTH */
-function openAuth(){
-  authModal.style.display="flex";
+/* Sidebar Toggle */
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-function register(){
-  users.push({username:username.value,password:password.value});
-  localStorage.setItem("users",JSON.stringify(users));
-  alert("Registered");
+/* Theme Switch */
+function toggleTheme(){
+  let body=document.body;
+  body.classList.toggle("light");
+  body.classList.toggle("dark");
+  let btn=document.getElementById("themeBtn");
+  btn.textContent=body.classList.contains("dark")?"🌙":"☀";
 }
 
-function login(){
-  const user=users.find(u=>u.username===username.value && u.password===password.value);
-  if(user){
-    currentUser=user.username;
-    localStorage.setItem("currentUser",currentUser);
-    alert("Logged in");
-  }else alert("Wrong info");
+/* Page Navigation */
+function openPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  history.pushState({page:id},"",`#${id}`);
 }
 
-/* PRODUCT */
-function openAdd(){
-  if(!currentUser) return alert("Login first");
-  productModal.style.display="flex";
+function goBack(){
+  history.back();
 }
 
-function saveProduct(){
-  const product={
-    id:Date.now(),
-    title:title.value,
-    price:price.value,
-    category:category.value,
-    desc:desc.value,
-    owner:currentUser
-  };
-  products.push(product);
-  localStorage.setItem("products",JSON.stringify(products));
-  renderProducts();
-  productModal.style.display="none";
-}
+/* Back Button Fix */
+window.addEventListener("popstate",function(event){
+  let page=location.hash.replace("#","");
+  if(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+  }else{
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById("home").classList.add("active");
+  }
+});
 
-function deleteProduct(id){
-  products=products.filter(p=>p.id!==id);
-  localStorage.setItem("products",JSON.stringify(products));
-  renderProducts();
-}
-
-function renderProducts(){
-  productGrid.innerHTML="";
-  const searchVal=search.value.toLowerCase();
-  const catVal=categoryFilter.value;
-
-  products.forEach(p=>{
-    if(
-      (catVal==="all"||p.category===catVal) &&
-      p.title.toLowerCase().includes(searchVal)
-    ){
-      productGrid.innerHTML+=`
-        <div class="card">
-          <h4>${p.title}</h4>
-          <p>${p.price}</p>
-          <p>${p.category}</p>
-          <p>${p.desc}</p>
-          ${p.owner===currentUser?`<button onclick="deleteProduct(${p.id})">Delete</button>`:""}
-        </div>
-      `;
-    }
-  });
-}
-
-search.onkeyup=renderProducts;
-categoryFilter.onchange=renderProducts;
-renderProducts();
-
-/* API SAVE */
-function saveApi(){
-  localStorage.setItem("openai_key",apiKeyInput.value);
-  alert("API Key saved locally");
-}
+/* Prevent Exit */
+history.pushState(null,"",location.href);
+window.addEventListener("popstate",function(){
+  history.pushState(null,"",location.href);
+});
 
 </script>
+
 </body>
 </html>
