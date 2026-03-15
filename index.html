@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.3 Quantum AI Core</title>
-
+<title>NEXORA v7.4 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -16,331 +15,173 @@ body{
   font-family:Arial, sans-serif;
   background:var(--dark);
   color:#fff;
-  transition:0.4s;
-  overflow-x:hidden;
 }
-body.light{
-  background:var(--light);
-  color:#111;
-}
-.neon{
-  position:fixed;
-  width:100%;
-  height:2px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
-  background-size:300px;
-  animation:move 3s linear infinite;
-  z-index:999;
-}
-.top{top:0;}
-.bottom{bottom:0;}
-@keyframes move{
-  0%{background-position:-300px}
-  100%{background-position:300px}
-}
-.sidebar{
-  position:fixed;
-  left:0;
-  top:0;
-  height:100%;
-  width:220px;
-  background:#111;
-  padding-top:60px;
-  transition:0.4s;
-}
-.sidebar.collapsed{width:70px;}
-.arrow-control{
-  position:fixed;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  cursor:pointer;
-  z-index:1000;
-}
-.arrow{font-size:22px;transition:0.4s;}
-.dots{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  margin:10px 0;
-  opacity:0;
-  transition:0.4s;
-}
-.dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  animation:glow 1.5s infinite alternate;
-}
-.dot:nth-child(1){background:red;}
-.dot:nth-child(2){background:green;}
-.dot:nth-child(3){background:yellow;}
-.dot:nth-child(4){background:purple;}
-@keyframes glow{
-  from{box-shadow:0 0 5px currentColor;}
-  to{box-shadow:0 0 20px currentColor;}
-}
-.arrow-control.active .arrow:first-child{transform:translateY(-20px);}
-.arrow-control.active .arrow:last-child{transform:translateY(20px);}
-.arrow-control.active .dots{opacity:1;}
-.content{
-  margin-left:220px;
-  padding:30px;
-  transition:0.4s;
-}
-.sidebar.collapsed ~ .content{margin-left:70px;}
+body.light{background:var(--light); color:#111;}
+.content{margin-left:220px; padding:30px;}
 .btn{
-  padding:10px 20px;
-  border:none;
-  border-radius:20px;
-  background:#111;
-  color:#fff;
-  margin:5px;
-  cursor:pointer;
-  box-shadow:0 0 10px var(--cyan);
+  padding:10px 20px; border:none; border-radius:20px; background:#111; color:#fff; margin:5px; cursor:pointer; box-shadow:0 0 10px var(--cyan);
 }
 .btn:hover{box-shadow:0 0 25px var(--cyan);}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:20px;
-}
-.card{
-  background:#111;
-  padding:15px;
-  border-radius:10px;
-  border:1px solid var(--cyan);
-}
-.theme-toggle{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  border:none;
-  font-size:24px;
-  cursor:pointer;
-  box-shadow:0 0 20px var(--cyan);
-}
-input,select{padding:8px;margin:5px;}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
+.card{background:#111; padding:15px; border-radius:10px; border:1px solid var(--cyan);}
+.theme-toggle{position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);}
 </style>
 </head>
 <body>
-
-<div class="neon top"></div>
-<div class="neon bottom"></div>
-
-<div class="sidebar" id="sidebar"></div>
-
-<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
-  <div class="arrow">▲</div>
-  <div class="dots">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
-  <div class="arrow">▼</div>
-</div>
-
 <div class="content">
-
 <h2>NEXORA Quantum Core</h2>
-<hr>
-<h3>AI Engine</h3>
-
-<button class="btn" onclick="openLogin()">Login / Register</button>
-<button class="btn" onclick="openAdd()">Add Product</button>
-<button class="btn" onclick="openProfile()">Profile</button>
-<button class="btn" onclick="viewFeed()">Follow Feed</button>
-
+<button class="btn" id="loginBtn">Login / Register</button>
+<button class="btn" id="addBtn">Add Product</button>
+<button class="btn" id="profileBtn">Profile</button>
+<button class="btn" id="feedBtn">Follow Feed</button>
 <div class="grid" id="productGrid"></div>
 </div>
-
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 <script>
-
-/* ================= API ================= */
-const API_URL = "https://nexora-backend-j2v3.onrender.com";
-
-/* ================= STATE ================= */
+const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
 
-/* ================= MENU ================= */
-function toggleMenu(){
-  sidebar.classList.toggle("collapsed");
-  arrowControl.classList.toggle("active");
-}
-
-/* ================= THEME ================= */
 function toggleTheme(){
   document.body.classList.toggle("light");
-  themeBtn.textContent=document.body.classList.contains("light")?"☀":"🌙";
+  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
 }
 
-/* ================= JWT LOGIN ================= */
+/* ===== LOGIN / REGISTER ===== */
 async function openLogin(){
   const username = prompt("Username:");
   const password = prompt("Password:");
-
-  if(!username || !password) return;
+  if(!username||!password) return alert("Enter both");
 
   try{
-    const res = await fetch(API_URL + "/auth/login",{
-      method:"POST",
+    const res = await fetch(API_URL+"/auth/login",{ 
+      method:"POST", 
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({username,password})
     });
-
     const data = await res.json();
-
     if(data.token){
       token = data.token;
-      currentUser = username;
+      currentUser=username;
       localStorage.setItem("token",token);
       localStorage.setItem("currentUser",currentUser);
-      alert("Logged in with JWT");
+      alert("Logged in!");
       renderProducts();
-    } else {
-      alert(data.message || "Login failed");
-    }
-
-  }catch(err){
-    console.log(err);
-  }
+    } else alert(data.message||"Login failed");
+  }catch(err){console.log(err);}
 }
 
-/* ================= PRODUCTS ================= */
+/* ===== RENDER PRODUCTS ===== */
 async function renderProducts(){
-
   try{
-    const res = await fetch(API_URL + "/products",{
-      headers:{
-        "Authorization":"Bearer "+token
-      }
+    const res = await fetch(API_URL+"/products",{
+      headers: token?{"Authorization":"Bearer "+token}:{}
     });
     const products = await res.json();
-
-    productGrid.innerHTML="";
-
+    const grid=document.getElementById("productGrid");
+    grid.innerHTML="";
     products.forEach(p=>{
-      productGrid.innerHTML += `
-      <div class="card">
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`
         <h3>${p.name}</h3>
         <p>Price: ${p.price}</p>
         <p>By: ${p.owner}</p>
-        ${p.owner===currentUser?`<button onclick="deleteProduct('${p._id}')">Delete</button>`:""}
-        <button onclick="followUser('${p.owner}')">Follow</button>
-      </div>`;
-    });
+      `;
+      if(token){
+        const followBtn=document.createElement("button");
+        followBtn.textContent="Follow";
+        followBtn.onclick=()=>followUser(p.owner);
+        card.appendChild(followBtn);
 
-  }catch(err){
-    console.log(err);
-  }
+        if(p.owner===currentUser){
+          const delBtn=document.createElement("button");
+          delBtn.textContent="Delete";
+          delBtn.onclick=()=>deleteProduct(p._id);
+          card.appendChild(delBtn);
+        }
+      }
+      grid.appendChild(card);
+    });
+  }catch(err){console.log(err);}
 }
 
-/* ================= ADD PRODUCT ================= */
+/* ===== ADD PRODUCT ===== */
 async function openAdd(){
   if(!token) return alert("Login first");
-
-  const name = prompt("Product name");
-  const price = prompt("Price");
-  if(!name || !price) return;
-
-  await fetch(API_URL + "/products",{
+  const name=prompt("Product name");
+  const price=prompt("Price");
+  if(!name||!price) return;
+  await fetch(API_URL+"/products",{
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+token
-    },
-    body:JSON.stringify({
-      name:name,
-      price:price,
-      owner:currentUser
-    })
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify({name,price,owner:currentUser})
   });
-
   renderProducts();
 }
 
-/* ================= DELETE PRODUCT ================= */
+/* ===== DELETE PRODUCT ===== */
 async function deleteProduct(id){
   if(!token) return alert("Login first");
-
-  await fetch(API_URL + "/products/"+id,{
+  await fetch(API_URL+"/products/"+id,{
     method:"DELETE",
-    headers:{
-      "Authorization":"Bearer "+token
-    }
+    headers:{"Authorization":"Bearer "+token}
   });
-
   renderProducts();
 }
 
-/* ================= FOLLOW ================= */
+/* ===== FOLLOW ===== */
 function followUser(user){
   if(!currentUser) return alert("Login first");
-  if(user===currentUser) return alert("You cannot follow yourself");
-
+  if(user===currentUser) return alert("Cannot follow yourself");
   if(!follows[currentUser]) follows[currentUser]=[];
   if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
-
   localStorage.setItem("follows",JSON.stringify(follows));
   alert("Followed "+user);
 }
 
-/* ================= PROFILE ================= */
+/* ===== PROFILE ===== */
 async function openProfile(){
   if(!token) return alert("Login first");
-
-  const res = await fetch(API_URL + "/products",{
-    headers:{
-      "Authorization":"Bearer "+token
-    }
-  });
+  const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
   const products = await res.json();
   const myProducts = products.filter(p=>p.owner===currentUser);
-
-  alert("My Products: "+myProducts.map(p=>p.name).join(", "));
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  myProducts.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;
+    grid.appendChild(card);
+  });
 }
 
-/* ================= FOLLOW FEED ================= */
+/* ===== FOLLOW FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
-
-  const res = await fetch(API_URL + "/products",{
-    headers:{
-      "Authorization":"Bearer "+token
-    }
-  });
+  const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
   const products = await res.json();
-
-  const feedProducts = products.filter(p=>{
-    return follows[currentUser]?.includes(p.owner);
-  });
-
-  productGrid.innerHTML="";
-
-  feedProducts.forEach(p=>{
-    productGrid.innerHTML += `
-    <div class="card">
-      <h3>${p.name}</h3>
-      <p>Price: ${p.price}</p>
-      <p>By: ${p.owner}</p>
-    </div>`;
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  const feed = products.filter(p=>follows[currentUser]?.includes(p.owner));
+  feed.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+    grid.appendChild(card);
   });
 }
 
-/* ================= START ================= */
-renderProducts();
+/* ===== EVENTS ===== */
+document.getElementById("loginBtn").onclick=openLogin;
+document.getElementById("addBtn").onclick=openAdd;
+document.getElementById("profileBtn").onclick=openProfile;
+document.getElementById("feedBtn").onclick=viewFeed;
 
+/* ===== START ===== */
+renderProducts();
 </script>
 </body>
 </html>
