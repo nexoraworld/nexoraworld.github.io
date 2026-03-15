@@ -2,134 +2,67 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.2 Quantum AI Core</title>
-<style>
-:root{
-  --dark:#0f0f14;
-  --light:#f5f1e6;
-  --cyan:#00f2ff;
-}
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:var(--dark);
-  color:#fff;
-  transition:0.4s;
-  overflow-x:hidden;
-}
-body.light{background:var(--light);color:#111;}
-.neon{position:fixed;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);background-size:300px;animation:move 3s linear infinite;z-index:999;}
-.top{top:0;} .bottom{bottom:0;}
-@keyframes move{0%{background-position:-300px}100%{background-position:300px}}
-.sidebar{position:fixed;left:0;top:0;height:100%;width:220px;background:#111;padding-top:60px;transition:0.4s;}
-.sidebar.collapsed{width:70px;}
-.arrow-control{position:fixed;left:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:1000;}
-.arrow{font-size:22px;transition:0.4s;}
-.dots{display:flex;flex-direction:column;gap:8px;margin:10px 0;opacity:0;transition:0.4s;}
-.dot{width:8px;height:8px;border-radius:50%;animation:glow 1.5s infinite alternate;}
-.dot:nth-child(1){background:red;} .dot:nth-child(2){background:green;} .dot:nth-child(3){background:yellow;} .dot:nth-child(4){background:purple;}
-@keyframes glow{from{box-shadow:0 0 5px currentColor;} to{box-shadow:0 0 20px currentColor;}}
-.arrow-control.active .arrow:first-child{transform:translateY(-20px);}
-.arrow-control.active .arrow:last-child{transform:translateY(20px);}
-.arrow-control.active .dots{opacity:1;}
-.content{margin-left:220px;padding:30px;transition:0.4s;}
-.sidebar.collapsed ~ .content{margin-left:70px;}
-.btn{padding:10px 20px;border:none;border-radius:20px;background:#111;color:#fff;margin:5px;cursor:pointer;box-shadow:0 0 10px var(--cyan);}
-.btn:hover{box-shadow:0 0 25px var(--cyan);}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
-.card{background:#111;padding:15px;border-radius:10px;border:1px solid var(--cyan);}
-.theme-toggle{position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;border:none;font-size:24px;cursor:pointer;box-shadow:0 0 20px var(--cyan);}
-input,select{padding:8px;margin:5px;}
-</style>
+<title>Add Product Test</title>
 </head>
 <body>
-<div class="neon top"></div>
-<div class="neon bottom"></div>
-<div class="sidebar" id="sidebar"></div>
-<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
-  <div class="arrow">▲</div>
-  <div class="dots">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
-  <div class="arrow">▼</div>
-</div>
 
-<div class="content">
-<h2>NEXORA Quantum Core</h2>
-<hr>
-<h3>AI Engine</h3>
-<input id="apiKeyInput" placeholder="OpenAI API Key">
-<button class="btn" onclick="saveApiKey()">Save Key</button>
-<hr>
-<input id="search" placeholder="Search...">
-<select id="categoryFilter">
-<option value="all">All</option>
-<option value="AI">AI</option>
-<option value="SciFi">SciFi</option>
-</select>
-<button class="btn" onclick="openAuth()">Login</button>
-<button class="btn" onclick="openAdd()">Add Product</button>
-<button class="btn" onclick="openProfile()">Profile</button>
-<div class="grid" id="productGrid"></div>
-</div>
-
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+<button onclick="openAdd()">Add Product</button>
+<div id="productList"></div>
 
 <script>
-let users = JSON.parse(localStorage.getItem("users"))||[];
-let products = JSON.parse(localStorage.getItem("products"))||[];
-let currentUser = localStorage.getItem("currentUser")||"";
-let openaiKey = localStorage.getItem("openaiKey")||"";
-let follows = JSON.parse(localStorage.getItem("follows"))||{};
+let products = JSON.parse(localStorage.getItem("products")) || [];
+let currentUser = prompt("Enter your username for test") || "TestUser";
+let openaiKey = ""; // opsiyonel: AI key varsa buraya ekle
 
-function toggleMenu(){ sidebar.classList.toggle("collapsed"); arrowControl.classList.toggle("active"); }
-function toggleTheme(){ document.body.classList.toggle("light"); themeBtn.textContent=document.body.classList.contains("light")?"☀":"🌙"; }
-
-function openAuth(){
-  let u=prompt("Username:");
-  let p=prompt("Password:");
-  let user=users.find(x=>x.username===u&&x.password===p);
-  if(user){ currentUser=u; localStorage.setItem("currentUser",u); alert("Logged in"); }
-  else{ users.push({username:u,password:p}); localStorage.setItem("users",JSON.stringify(users)); currentUser=u; localStorage.setItem("currentUser",u); alert("Registered & Logged in"); }
-}
-
-function saveApiKey(){ let key = apiKeyInput.value.trim(); if(!key) return alert("Enter API Key"); localStorage.setItem("openaiKey",key); openaiKey=key; alert("API Key Saved"); }
-async function generateAI(promptText){ if(!openaiKey){ alert("Save API key first"); return ""; } try{ const res = await fetch("https://api.openai.com/v1/chat/completions",{ method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+openaiKey}, body:JSON.stringify({ model:"gpt-4o-mini", messages:[{role:"system",content:"Generate product title, description, 3 hashtags"}, {role:"user",content:promptText}] }) }); const data = await res.json(); return data?.choices?.[0]?.message?.content||""; }catch(e){ alert("AI error"); return ""; }
-
-function renderProducts(){
-  products = JSON.parse(localStorage.getItem("products"))||[];
-  productGrid.innerHTML="";
-  let s=search.value.toLowerCase();
-  let c=categoryFilter.value;
-  products.forEach(p=>{
-    if((c==="all"||p.cat===c)&&(p.name||"").toLowerCase().includes(s)){
-      productGrid.innerHTML+=`<div class="card"><h4>${p.name}</h4><p>${p.cat}</p><p>${p.desc}</p><p>Price: ${p.price}</p><p>By: ${p.owner}</p></div>`;
-    }
-  });
+async function generateAI(promptText){
+  if(!openaiKey) return "Default AI description for: " + promptText;
+  try{
+    const res = await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+openaiKey
+      },
+      body:JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[
+          {role:"system",content:"Generate product title, description, 3 hashtags."},
+          {role:"user",content:promptText}
+        ]
+      })
+    });
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content || "";
+  }catch(e){ return "AI error"; }
 }
 
 async function openAdd(){
-  if(!currentUser){ alert("Login first"); return; }
-  let title=prompt("Product title"); if(!title) return;
-  let cat=prompt("Category (AI/SciFi)")||"";
-  let useAI=confirm("Use AI to generate description?");
-  let desc="";
-  if(useAI){ let idea=prompt("Describe product idea"); if(idea) desc=await generateAI(idea); } else { desc=prompt("Description")||""; }
-  let price=prompt("Price")||"0";
-  let newProduct={name:title,cat,desc,price,owner:currentUser,id:Date.now()};
+  let title = prompt("Product Title");
+  if(!title) return;
+  let cat = prompt("Category (AI/SciFi)") || "";
+  let useAI = confirm("Use AI to generate description?");
+  let desc = "";
+  if(useAI){
+    let idea = prompt("Describe your product idea");
+    desc = await generateAI(idea);
+  } else {
+    desc = prompt("Description") || "";
+  }
+  let price = prompt("Price") || "0";
+  let newProduct = {name:title, cat, desc, price, owner:currentUser, id:Date.now()};
   products.push(newProduct);
-  localStorage.setItem("products",JSON.stringify(products));
+  localStorage.setItem("products", JSON.stringify(products));
   renderProducts();
 }
 
-function openProfile(){ if(!currentUser){ alert("Login first"); return; } let my=products.filter(p=>p.owner===currentUser); alert("My Products: "+my.map(p=>p.name).join(", ")); }
+function renderProducts(){
+  let list = document.getElementById("productList");
+  list.innerHTML = "";
+  products.forEach(p=>{
+    list.innerHTML += `<div><strong>${p.name}</strong> | ${p.cat} | ${p.desc} | $${p.price} | by ${p.owner}</div>`;
+  });
+}
 
-search.onkeyup=renderProducts;
-categoryFilter.onchange=renderProducts;
 renderProducts();
 </script>
 </body>
