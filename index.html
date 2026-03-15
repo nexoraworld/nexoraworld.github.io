@@ -2,68 +2,137 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Add Product Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXORA</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f0f14;
+color:white;
+}
+
+.content{
+padding:30px;
+}
+
+.btn{
+padding:10px 20px;
+border:none;
+border-radius:20px;
+background:#111;
+color:#fff;
+margin:5px;
+cursor:pointer;
+box-shadow:0 0 10px cyan;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+gap:20px;
+}
+
+.card{
+background:#111;
+padding:15px;
+border-radius:10px;
+border:1px solid cyan;
+}
+
+</style>
 </head>
+
 <body>
 
-<button onclick="openAdd()">Add Product</button>
-<div id="productList"></div>
+<div class="content">
+
+<h2>NEXORA Products</h2>
+
+<button class="btn" onclick="openAdd()">Add Product</button>
+
+<div class="grid" id="productGrid"></div>
+
+</div>
 
 <script>
-let products = JSON.parse(localStorage.getItem("products")) || [];
-let currentUser = prompt("Enter your username for test") || "TestUser";
-let openaiKey = ""; // opsiyonel: AI key varsa buraya ekle
 
-async function generateAI(promptText){
-  if(!openaiKey) return "Default AI description for: " + promptText;
-  try{
-    const res = await fetch("https://api.openai.com/v1/chat/completions",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+openaiKey
-      },
-      body:JSON.stringify({
-        model:"gpt-4o-mini",
-        messages:[
-          {role:"system",content:"Generate product title, description, 3 hashtags."},
-          {role:"user",content:promptText}
-        ]
-      })
-    });
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content || "";
-  }catch(e){ return "AI error"; }
+/* ================= API ================= */
+
+const API_URL = "https://nexora-backend-j2v3.onrender.com";
+
+/* ================= PRODUCTS ================= */
+
+async function renderProducts(){
+
+try{
+
+const res = await fetch(API_URL + "/products");
+
+const products = await res.json();
+
+productGrid.innerHTML="";
+
+products.forEach(p=>{
+
+productGrid.innerHTML += `
+
+<div class="card">
+
+<h3>${p.name}</h3>
+
+<p>Price: ${p.price}</p>
+
+</div>
+
+`;
+
+});
+
+}catch(err){
+
+console.log(err);
+
 }
+
+}
+
+/* ================= ADD PRODUCT ================= */
 
 async function openAdd(){
-  let title = prompt("Product Title");
-  if(!title) return;
-  let cat = prompt("Category (AI/SciFi)") || "";
-  let useAI = confirm("Use AI to generate description?");
-  let desc = "";
-  if(useAI){
-    let idea = prompt("Describe your product idea");
-    desc = await generateAI(idea);
-  } else {
-    desc = prompt("Description") || "";
-  }
-  let price = prompt("Price") || "0";
-  let newProduct = {name:title, cat, desc, price, owner:currentUser, id:Date.now()};
-  products.push(newProduct);
-  localStorage.setItem("products", JSON.stringify(products));
-  renderProducts();
-}
 
-function renderProducts(){
-  let list = document.getElementById("productList");
-  list.innerHTML = "";
-  products.forEach(p=>{
-    list.innerHTML += `<div><strong>${p.name}</strong> | ${p.cat} | ${p.desc} | $${p.price} | by ${p.owner}</div>`;
-  });
-}
+let name = prompt("Product name");
+
+let price = prompt("Price");
+
+if(!name || !price) return;
+
+await fetch(API_URL + "/products",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+name:name,
+price:price
+})
+
+});
 
 renderProducts();
+
+}
+
+/* ================= START ================= */
+
+renderProducts();
+
 </script>
+
 </body>
 </html>
