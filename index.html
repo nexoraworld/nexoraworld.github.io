@@ -4,93 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXORA v7.3 Quantum AI Core</title>
+
 <style>
-:root{
-  --dark:#0f0f14;
-  --light:#f5f1e6;
-  --cyan:#00f2ff;
-}
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:var(--dark);
-  color:#fff;
-  transition:0.4s;
-  overflow-x:hidden;
+  font-family:Arial;
+  background:#0f0f14;
+  color:white;
 }
-body.light{
-  background:var(--light);
-  color:#111;
-}
-.neon{
-  position:fixed;
-  width:100%;
-  height:2px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
-  background-size:300px;
-  animation:move 3s linear infinite;
-  z-index:999;
-}
-.top{top:0;}
-.bottom{bottom:0;}
-@keyframes move{
-  0%{background-position:-300px}
-  100%{background-position:300px}
-}
-.sidebar{
-  position:fixed;
-  left:0;
-  top:0;
-  height:100%;
-  width:220px;
-  background:#111;
-  padding-top:60px;
-  transition:0.4s;
-}
-.sidebar.collapsed{width:70px;}
-.arrow-control{
-  position:fixed;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  cursor:pointer;
-  z-index:1000;
-}
-.arrow{font-size:22px;transition:0.4s;}
-.dots{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  margin:10px 0;
-  opacity:0;
-  transition:0.4s;
-}
-.dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  animation:glow 1.5s infinite alternate;
-}
-.dot:nth-child(1){background:red;}
-.dot:nth-child(2){background:green;}
-.dot:nth-child(3){background:yellow;}
-.dot:nth-child(4){background:purple;}
-@keyframes glow{
-  from{box-shadow:0 0 5px currentColor;}
-  to{box-shadow:0 0 20px currentColor;}
-}
-.arrow-control.active .arrow:first-child{transform:translateY(-20px);}
-.arrow-control.active .arrow:last-child{transform:translateY(20px);}
-.arrow-control.active .dots{opacity:1;}
 .content{
-  margin-left:220px;
   padding:30px;
-  transition:0.4s;
 }
-.sidebar.collapsed ~ .content{margin-left:70px;}
 .btn{
   padding:10px 20px;
   border:none;
@@ -99,9 +23,8 @@ body.light{
   color:#fff;
   margin:5px;
   cursor:pointer;
-  box-shadow:0 0 10px var(--cyan);
+  box-shadow:0 0 10px cyan;
 }
-.btn:hover{box-shadow:0 0 25px var(--cyan);}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
@@ -111,64 +34,22 @@ body.light{
   background:#111;
   padding:15px;
   border-radius:10px;
-  border:1px solid var(--cyan);
+  border:1px solid cyan;
 }
-.theme-toggle{
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  border:none;
-  font-size:24px;
-  cursor:pointer;
-  box-shadow:0 0 20px var(--cyan);
-}
-input,select{padding:8px;margin:5px;}
 </style>
 </head>
 <body>
 
-<div class="neon top"></div>
-<div class="neon bottom"></div>
-
-<div class="sidebar" id="sidebar"></div>
-<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
-  <div class="arrow">▲</div>
-  <div class="dots">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
-  <div class="arrow">▼</div>
-</div>
-
 <div class="content">
-<h2>NEXORA Quantum Core v7.3</h2>
-<hr>
+<h2>NEXORA Products</h2>
 
-<h3>AI Engine</h3>
-<input id="apiKeyInput" placeholder="OpenAI API Key">
-<button class="btn" onclick="saveApiKey()">Save Key</button>
-<hr>
-
-<input id="search" placeholder="Search...">
-<select id="categoryFilter">
-<option value="all">All</option>
-<option value="AI">AI</option>
-<option value="SciFi">SciFi</option>
-</select>
-
-<button class="btn" onclick="openAuth()">Login</button>
+<button class="btn" onclick="openLogin()">Login / Register</button>
 <button class="btn" onclick="openAdd()">Add Product</button>
 <button class="btn" onclick="openProfile()">Profile</button>
+<button class="btn" onclick="viewFeed()">Follow Feed</button>
 
 <div class="grid" id="productGrid"></div>
 </div>
-
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <script>
 
@@ -176,139 +57,165 @@ input,select{padding:8px;margin:5px;}
 const API_URL = "https://nexora-backend-j2v3.onrender.com";
 
 /* ================= STATE ================= */
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let currentUser = localStorage.getItem("currentUser");
-let follows = JSON.parse(localStorage.getItem("follows")) || [];
-let openaiKey = localStorage.getItem("openaiKey") || "";
-let products = [];
+let token = localStorage.getItem("token") || null;
+let currentUser = localStorage.getItem("currentUser") || null;
+let follows = JSON.parse(localStorage.getItem("follows")) || {};
 
-/* ================= MENU ================= */
-function toggleMenu(){
-  sidebar.classList.toggle("collapsed");
-  arrowControl.classList.toggle("active");
-}
+/* ================= JWT LOGIN ================= */
+async function openLogin(){
+  const username = prompt("Username:");
+  const password = prompt("Password:");
 
-/* ================= THEME ================= */
-function toggleTheme(){
-  document.body.classList.toggle("light");
-  themeBtn.textContent=document.body.classList.contains("light")?"☀":"🌙";
-}
+  if(!username || !password) return;
 
-/* ================= AUTH ================= */
-function openAuth(){
-  let u=prompt("Username:");
-  let p=prompt("Password:");
-  let user=users.find(x=>x.username===u && x.password===p);
-  if(user){
-    currentUser=u;
-    localStorage.setItem("currentUser",u);
-    alert("Logged in");
-  } else {
-    users.push({username:u,password:p});
-    localStorage.setItem("users",JSON.stringify(users));
-    currentUser=u;
-    localStorage.setItem("currentUser",u);
-    alert("Registered & Logged in");
-  }
-}
-
-/* ================= AI SYSTEM ================= */
-function saveApiKey(){
-  let key = apiKeyInput.value.trim();
-  if(!key) return alert("Enter API Key");
-  localStorage.setItem("openaiKey", key);
-  openaiKey = key;
-  alert("API Key Saved");
-}
-
-async function generateAI(promptText){
-  if(!openaiKey) return "Default AI description for: " + promptText;
   try{
-    const res = await fetch("https://api.openai.com/v1/chat/completions",{
+    const res = await fetch(API_URL + "/auth/login",{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+openaiKey
-      },
-      body:JSON.stringify({
-        model:"gpt-4o-mini",
-        messages:[
-          {role:"system",content:"Generate a product title, description and 3 hashtags."},
-          {role:"user",content:promptText}
-        ]
-      })
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username,password})
     });
+
     const data = await res.json();
-    return data?.choices?.[0]?.message?.content || "";
-  } catch(e){ return "AI error"; }
+
+    if(data.token){
+      token = data.token;
+      currentUser = username;
+      localStorage.setItem("token",token);
+      localStorage.setItem("currentUser",currentUser);
+      alert("Logged in with JWT");
+      renderProducts();
+    } else {
+      alert(data.message || "Login failed");
+    }
+
+  }catch(err){
+    console.log(err);
+  }
 }
 
 /* ================= PRODUCTS ================= */
 async function renderProducts(){
+
   try{
-    const res = await fetch(API_URL + "/products");
-    products = await res.json();
-    productGrid.innerHTML="";
-    let searchVal = search.value.toLowerCase();
-    let catVal = categoryFilter.value;
-    products.forEach(p=>{
-      if((catVal==="all"||p.cat===catVal) && (p.name||"").toLowerCase().includes(searchVal)){
-        productGrid.innerHTML+=`
-        <div class="card">
-          <h4>${p.name}</h4>
-          <p>${p.cat||""}</p>
-          <p>${p.desc||""}</p>
-          <p>Price: ${p.price}</p>
-          <p>By: ${p.owner||"unknown"}</p>
-        </div>`;
+    const res = await fetch(API_URL + "/products",{
+      headers:{
+        "Authorization":"Bearer "+token
       }
     });
-  } catch(err){ console.log(err); }
+    const products = await res.json();
+
+    productGrid.innerHTML="";
+
+    products.forEach(p=>{
+      productGrid.innerHTML += `
+      <div class="card">
+        <h3>${p.name}</h3>
+        <p>Price: ${p.price}</p>
+        <p>By: ${p.owner}</p>
+        ${p.owner===currentUser?`<button onclick="deleteProduct('${p._id}')">Delete</button>`:""}
+        <button onclick="followUser('${p.owner}')">Follow</button>
+      </div>`;
+    });
+
+  }catch(err){
+    console.log(err);
+  }
 }
 
 /* ================= ADD PRODUCT ================= */
 async function openAdd(){
-  if(!currentUser) return alert("Login first");
-  let title = prompt("Product Title");
-  if(!title) return;
-  let cat = prompt("Category (AI/SciFi)") || "";
-  let useAI = confirm("Use AI to generate description?");
-  let desc = "";
-  if(useAI){
-    let idea = prompt("Describe your product idea:");
-    desc = await generateAI(idea);
-  } else {
-    desc = prompt("Description") || "";
-  }
-  let price = prompt("Price") || "0";
+  if(!token) return alert("Login first");
+
+  const name = prompt("Product name");
+  const price = prompt("Price");
+  if(!name || !price) return;
 
   await fetch(API_URL + "/products",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name:title,cat,desc,price,owner:currentUser})
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
+    },
+    body:JSON.stringify({
+      name:name,
+      price:price,
+      owner:currentUser
+    })
   });
 
   renderProducts();
 }
 
-/* ================= PROFILE ================= */
-function openProfile(){
+/* ================= DELETE PRODUCT ================= */
+async function deleteProduct(id){
+  if(!token) return alert("Login first");
+
+  await fetch(API_URL + "/products/"+id,{
+    method:"DELETE",
+    headers:{
+      "Authorization":"Bearer "+token
+    }
+  });
+
+  renderProducts();
+}
+
+/* ================= FOLLOW ================= */
+function followUser(user){
   if(!currentUser) return alert("Login first");
-  let myProducts = products.filter(p=>p.owner===currentUser);
+  if(user===currentUser) return alert("You cannot follow yourself");
+
+  if(!follows[currentUser]) follows[currentUser]=[];
+  if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
+
+  localStorage.setItem("follows",JSON.stringify(follows));
+  alert("Followed "+user);
+}
+
+/* ================= PROFILE ================= */
+async function openProfile(){
+  if(!token) return alert("Login first");
+
+  const res = await fetch(API_URL + "/products",{
+    headers:{
+      "Authorization":"Bearer "+token
+    }
+  });
+  const products = await res.json();
+  const myProducts = products.filter(p=>p.owner===currentUser);
+
   alert("My Products: "+myProducts.map(p=>p.name).join(", "));
 }
 
-/* ================= FILTER ================= */
-search.onkeyup = renderProducts;
-categoryFilter.onchange = renderProducts;
+/* ================= FOLLOW FEED ================= */
+async function viewFeed(){
+  if(!token) return alert("Login first");
 
+  const res = await fetch(API_URL + "/products",{
+    headers:{
+      "Authorization":"Bearer "+token
+    }
+  });
+  const products = await res.json();
+
+  const feedProducts = products.filter(p=>{
+    return follows[currentUser]?.includes(p.owner);
+  });
+
+  productGrid.innerHTML="";
+
+  feedProducts.forEach(p=>{
+    productGrid.innerHTML += `
+    <div class="card">
+      <h3>${p.name}</h3>
+      <p>Price: ${p.price}</p>
+      <p>By: ${p.owner}</p>
+    </div>`;
+  });
+}
+
+/* ================= START ================= */
 renderProducts();
-
-/* ================= BACK FIX ================= */
-history.pushState(null,"",location.href);
-window.addEventListener("popstate",function(){
-  history.pushState(null,"",location.href);
-});
 
 </script>
 
