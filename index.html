@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v8.1 Quantum AI Core</title>
+<title>NEXORA v8.2 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -51,7 +51,10 @@ body.light{
   cursor:pointer;
   z-index:1000;
 }
-.arrow{font-size:22px;transition:0.4s;}
+.arrow{
+  font-size:22px;
+  transition:0.4s;
+}
 .dots{
   position:relative;
   width:10px;
@@ -83,8 +86,8 @@ body.light{
   50%{top:50px; opacity:0.5;}
   100%{top:0; opacity:1;}
 }
-.arrow-control.active .arrow:first-child{transform:translateY(-20px);}
-.arrow-control.active .arrow:last-child{transform:translateY(20px);}
+.arrow-control.active .arrow:first-child{transform:translateY(-50px);}
+.arrow-control.active .arrow:last-child{transform:translateY(50px);}
 .content .btn{
   margin:10px 15px;
 }
@@ -158,13 +161,8 @@ let menuOpen=true;
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
-  // Ay modu yazıları görünür yap
   document.querySelectorAll(".card").forEach(c=>{
-    if(document.body.classList.contains("light")){
-      c.style.color="#111";
-    } else {
-      c.style.color="#fff";
-    }
+    c.style.color=document.body.classList.contains("light")?"#111":"#fff";
   });
 }
 
@@ -176,9 +174,10 @@ function toggleMenu(){
   menuOpen=!menuOpen;
   sidebar.classList.toggle("collapsed");
   arrowControl.classList.toggle("active");
-  // Tüm butonları gizle/göster
   const buttons=mainContent.querySelectorAll(".btn, select, #search");
+  const cards=mainContent.querySelectorAll(".card");
   buttons.forEach(b=>b.style.display=menuOpen?"inline-block":"none");
+  cards.forEach(c=>c.style.display=menuOpen?"grid-item":"none");
 }
 
 /* ===== LOGIN ===== */
@@ -187,11 +186,7 @@ async function openLogin(){
   const password=prompt("Password:");
   if(!username||!password) return alert("Enter both");
   try{
-    const res=await fetch(API_URL+"/auth/login",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({username,password})
-    });
+    const res=await fetch(API_URL+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
     const data=await res.json();
     if(data.token){
       token=data.token;
@@ -244,17 +239,7 @@ async function openAdd(){
   const name=prompt("Product name");
   const price=prompt("Price");
   if(!name||!price) return;
-  const useAI=confirm("Use AI to generate description?");
-  let desc="";
-  if(useAI){
-    const idea=prompt("Describe your product idea:");
-    desc=await generateAI(idea);
-  }
-  await fetch(API_URL+"/products",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,desc,owner:currentUser})
-  });
+  await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
   renderProducts();
 }
 
@@ -310,20 +295,6 @@ async function viewFeed(){
 /* ===== SEARCH & FILTER ===== */
 document.getElementById("search").onkeyup=renderProducts;
 document.getElementById("categoryFilter").onchange=renderProducts;
-
-/* ===== OPENAI ===== */
-let openaiKey=localStorage.getItem("openaiKey")||"";
-function saveApiKey(key){ localStorage.setItem("openaiKey",key); openaiKey=key;}
-async function generateAI(promptText){
-  if(!openaiKey){alert("Save API key first"); return "";}
-  const response=await fetch("https://api.openai.com/v1/chat/completions",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+openaiKey},
-    body:JSON.stringify({model:"gpt-4o-mini",messages:[{role:"system",content:"Generate a product title, description and 3 hashtags."},{role:"user",content:promptText}]})
-  });
-  const data=await response.json();
-  return data.choices ? data.choices[0].message.content : "";
-}
 
 /* ===== WEBSOCKET ===== */
 function initWebSocket(){
