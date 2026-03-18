@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v8.4 Quantum AI Core</title>
+<title>NEXORA v8.5 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -35,7 +35,7 @@ body.light{
   position:fixed;
   left:0; top:0;
   width:220px; height:100%;
-  background:transparent; /* body ile aynı renk, çizgi yok */
+  background:transparent;
   padding-top:60px;
   transition:0.4s;
   overflow:hidden;
@@ -90,9 +90,7 @@ body.light{
 }
 .arrow-control.active .arrow:first-child{transform:translateY(-50px);}
 .arrow-control.active .arrow:last-child{transform:translateY(50px);}
-.content .btn{
-  margin:10px 15px;
-}
+.content .btn{margin:10px 15px;}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
@@ -113,9 +111,25 @@ body.light{
   width:60px; height:60px; border-radius:50%;
   font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);
 }
+
+/* ===== MODAL ===== */
+.modal-backdrop{
+  display:none;
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6); z-index:2000;
+  justify-content:center; align-items:center;
+}
+.modal{
+  background:var(--card-dark); padding:20px; border-radius:10px;
+  display:flex; flex-direction:column; gap:10px;
+  width:300px;
+}
+.modal input{padding:8px;}
+.modal button{padding:8px; cursor:pointer; background:var(--cyan); border:none; color:#000; border-radius:5px;}
 </style>
 </head>
 <body>
+
 <div class="sidebar" id="sidebar"></div>
 <div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
   <div class="arrow">▲</div>
@@ -123,40 +137,57 @@ body.light{
   <div class="arrow">▼</div>
   <div class="arrow-line"></div>
 </div>
+
 <div class="content" id="mainContent">
-  <h2>NEXORA Quantum Core</h2>
-  <select id="categoryFilter">
-    <option value="all">All Categories</option>
-    <option value="AI">AI</option>
-    <option value="SciFi">SciFi</option>
-    <option value="Other">Other</option>
-  </select>
-  <input id="search" placeholder="Search..." style="padding:8px;margin:5px; width:200px;">
-  <button class="btn" id="loginBtn">Login / Register</button>
-  <button class="btn" id="addBtn">Add Product</button>
-  <button class="btn" id="profileBtn">Profile</button>
-  <button class="btn" id="feedBtn">Follow Feed</button>
-  <div class="grid" id="productGrid"></div>
+<h2>NEXORA Quantum Core</h2>
+
+<select id="categoryFilter">
+  <option value="all">All Categories</option>
+  <option value="AI">AI</option>
+  <option value="SciFi">SciFi</option>
+  <option value="Other">Other</option>
+</select>
+<input id="search" placeholder="Search..." style="padding:8px;margin:5px; width:200px;">
+
+<button class="btn" id="loginBtn">Login / Register</button>
+<button class="btn" id="addBtn">Add Product</button>
+<button class="btn" id="profileBtn">Profile</button>
+<button class="btn" id="feedBtn">Follow Feed</button>
+
+<div class="grid" id="productGrid"></div>
 </div>
+
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalForm">
+    <h3>Add Product</h3>
+    <input id="modalName" placeholder="Product Name">
+    <input id="modalPrice" placeholder="Price">
+    <button onclick="submitProduct()">Add</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
 <script>
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
-let ws=null;
-let menuOpen=true;
+let ws=null; let menuOpen=true;
 
+/* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
   document.querySelectorAll(".card").forEach(c=>c.style.color="inherit");
 }
 
+/* ===== SIDEBAR ===== */
 const sidebar=document.getElementById("sidebar");
 const arrowControl=document.getElementById("arrowControl");
 const mainContent=document.getElementById("mainContent");
-
 function toggleMenu(){
   menuOpen=!menuOpen;
   sidebar.classList.toggle("collapsed");
@@ -167,6 +198,7 @@ function toggleMenu(){
   cards.forEach(c=>c.style.display=menuOpen?"grid-item":"none");
 }
 
+/* ===== LOGIN ===== */
 async function openLogin(){
   const username=prompt("Username:");
   const password=prompt("Password:");
@@ -175,17 +207,16 @@ async function openLogin(){
     const res=await fetch(API_URL+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
     const data=await res.json();
     if(data.token){
-      token=data.token;
-      currentUser=username;
+      token=data.token; currentUser=username;
       localStorage.setItem("token",token);
       localStorage.setItem("currentUser",currentUser);
       alert("Logged in!");
-      renderProducts();
-      initWebSocket();
+      renderProducts(); initWebSocket();
     } else alert(data.message||"Login failed");
   }catch(err){console.log(err);}
 }
 
+/* ===== RENDER PRODUCTS ===== */
 async function renderProducts(){
   try{
     const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}} );
@@ -194,7 +225,7 @@ async function renderProducts(){
     grid.innerHTML="";
     const searchVal=document.getElementById("search").value.toLowerCase();
     const catVal=document.getElementById("categoryFilter").value;
-    products.filter(p=> (catVal==="all"||p.cat===catVal) && (p.name.toLowerCase().includes(searchVal)) )
+    products.filter(p=> (catVal==="all"||p.cat===catVal) && (p.name.toLowerCase().includes(searchVal)))
     .forEach(p=>{
       const card=document.createElement("div");
       card.className="card";
@@ -216,23 +247,31 @@ async function renderProducts(){
   }catch(err){console.log(err);}
 }
 
-async function openAdd(){
+/* ===== ADD PRODUCT MODAL ===== */
+function openAdd(){
   if(!token) return alert("Login first");
-  const name=prompt("Product name");
-  const price=prompt("Price");
-  if(!name||!price) return;
+  document.getElementById("modalBackdrop").style.display="flex";
+}
+function closeModal(){
+  document.getElementById("modalBackdrop").style.display="none";
+}
+async function submitProduct(){
+  const name=document.getElementById("modalName").value;
+  const price=document.getElementById("modalPrice").value;
+  if(!name||!price) return alert("Enter both fields");
   const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
-  if(res.ok) alert("Product added!");
+  if(res.ok){ alert("Product added!"); closeModal(); renderProducts(); }
   else alert("Error adding product!");
-  renderProducts();
 }
 
+/* ===== DELETE ===== */
 async function deleteProduct(id){
   if(!token) return alert("Login first");
   await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}});
   renderProducts();
 }
 
+/* ===== FOLLOW ===== */
 function followUser(user){
   if(!currentUser) return alert("Login first");
   if(user===currentUser) return alert("Cannot follow yourself");
@@ -242,6 +281,7 @@ function followUser(user){
   alert("Followed "+user);
 }
 
+/* ===== PROFILE ===== */
 async function openProfile(){
   if(!token) return alert("Login first");
   const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
@@ -257,13 +297,14 @@ async function openProfile(){
   });
 }
 
+/* ===== FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
   const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
   const products=await res.json();
-  const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
+  const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));
   feed.forEach(p=>{
     const card=document.createElement("div");
     card.className="card";
@@ -272,15 +313,18 @@ async function viewFeed(){
   });
 }
 
+/* ===== SEARCH & FILTER ===== */
 document.getElementById("search").onkeyup=renderProducts;
 document.getElementById("categoryFilter").onchange=renderProducts;
 
+/* ===== WEBSOCKET ===== */
 function initWebSocket(){
   if(ws) ws.close();
   ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");
   ws.onmessage=e=>renderProducts();
 }
 
+/* ===== EVENTS ===== */
 document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
