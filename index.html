@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v8.0 Quantum AI Core</title>
+<title>NEXORA v8.1 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
   --light:#f5f1e6;
   --cyan:#00f2ff;
   --hover:#0ff;
+  --card-dark:#111;
+  --card-light:#ddd;
 }
 body{
   margin:0;
@@ -92,16 +94,15 @@ body.light{
   gap:25px;
 }
 .card{
-  background:#111;
+  background:var(--card-dark);
   padding:15px;
   border-radius:10px;
   border:1px solid var(--cyan);
   transition:0.3s;
   position:relative;
 }
-.card:hover{
-  box-shadow:0 0 25px var(--hover);
-}
+body.light .card{background:var(--card-light); color:#111;}
+.card:hover{box-shadow:0 0 25px var(--hover);}
 .theme-toggle{
   position:fixed; bottom:20px; right:20px;
   width:60px; height:60px; border-radius:50%;
@@ -125,7 +126,8 @@ body.light{
   <div class="arrow">▼</div>
   <div class="arrow-line"></div>
 </div>
-<div class="content">
+
+<div class="content" id="mainContent">
 <h2>NEXORA Quantum Core</h2>
 <select id="categoryFilter">
 <option value="all">All Categories</option>
@@ -140,6 +142,7 @@ body.light{
 <button class="btn" id="feedBtn">Follow Feed</button>
 <div class="grid" id="productGrid"></div>
 </div>
+
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <script>
@@ -149,19 +152,33 @@ let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
 let ws=null;
+let menuOpen=true;
 
 /* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
+  // Ay modu yazıları görünür yap
+  document.querySelectorAll(".card").forEach(c=>{
+    if(document.body.classList.contains("light")){
+      c.style.color="#111";
+    } else {
+      c.style.color="#fff";
+    }
+  });
 }
 
 /* ===== SIDEBAR ===== */
 const sidebar=document.getElementById("sidebar");
 const arrowControl=document.getElementById("arrowControl");
+const mainContent=document.getElementById("mainContent");
 function toggleMenu(){
+  menuOpen=!menuOpen;
   sidebar.classList.toggle("collapsed");
   arrowControl.classList.toggle("active");
+  // Tüm butonları gizle/göster
+  const buttons=mainContent.querySelectorAll(".btn, select, #search");
+  buttons.forEach(b=>b.style.display=menuOpen?"inline-block":"none");
 }
 
 /* ===== LOGIN ===== */
@@ -169,7 +186,6 @@ async function openLogin(){
   const username=prompt("Username:");
   const password=prompt("Password:");
   if(!username||!password) return alert("Enter both");
-
   try{
     const res=await fetch(API_URL+"/auth/login",{
       method:"POST",
