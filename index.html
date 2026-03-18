@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.5 Quantum AI Core</title>
+<title>NEXORA v7.6 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -16,30 +16,114 @@ body{
   background:var(--dark);
   color:#fff;
   transition:0.4s;
+  overflow-x:hidden;
 }
 body.light{background:var(--light); color:#111;}
-.content{margin-left:220px; padding:30px; transition:0.4s;}
-.btn{
-  padding:10px 20px;
-  border:none;
-  border-radius:20px;
+/* Sidebar */
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  height:100%;
+  width:220px;
   background:#111;
-  color:#fff;
-  margin:5px;
+  padding-top:60px;
+  transition:0.4s;
+}
+.sidebar.collapsed{width:70px;}
+.arrow-control{
+  position:fixed;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   cursor:pointer;
+  z-index:1000;
+}
+.arrow{font-size:22px;transition:0.4s;}
+.dots{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin:10px 0;
+  opacity:0;
+  transition:0.4s;
+}
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  animation:glow 1.5s infinite alternate;
+}
+.dot:nth-child(1){background:red;}
+.dot:nth-child(2){background:green;}
+.dot:nth-child(3){background:yellow;}
+.dot:nth-child(4){background:purple;}
+@keyframes glow{
+  from{box-shadow:0 0 5px currentColor;}
+  to{box-shadow:0 0 20px currentColor;}
+}
+.arrow-control.active .arrow:first-child{transform:translateY(-20px);}
+.arrow-control.active .arrow:last-child{transform:translateY(20px);}
+.arrow-control.active .dots{opacity:1;}
+.content{
+  margin-left:220px;
+  padding:30px;
+  transition:0.4s;
+}
+.sidebar.collapsed ~ .content{margin-left:70px;}
+
+/* Buttons & grid */
+.btn{
+  padding:10px 20px; border:none; border-radius:20px;
+  background:#111; color:#fff; margin:5px; cursor:pointer;
   box-shadow:0 0 10px var(--cyan);
 }
 .btn:hover{box-shadow:0 0 25px var(--cyan);}
 .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
 .card{background:#111; padding:15px; border-radius:10px; border:1px solid var(--cyan);}
+.card button{margin-top:5px;}
 .theme-toggle{position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);}
+
+/* Inputs */
+input, select{padding:8px; margin:5px; border-radius:10px; border:none; outline:none; box-shadow:0 0 5px var(--cyan);}
+
+/* Responsive */
+@media(max-width:768px){
+  .content{margin-left:0; padding:15px;}
+  .sidebar{width:70px;}
+}
 </style>
 </head>
 <body>
 
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar"></div>
+<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
+  <div class="arrow">▲</div>
+  <div class="dots">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="arrow">▼</div>
+</div>
+
 <div class="content">
 <h2>NEXORA Quantum Core</h2>
 
+<!-- Filters -->
+<input type="text" id="searchInput" placeholder="Search products...">
+<select id="categoryFilter">
+  <option value="all">All Categories</option>
+  <option value="AI">AI</option>
+  <option value="SciFi">SciFi</option>
+</select>
+
+<!-- Main buttons -->
 <button class="btn" id="loginBtn">Login / Register</button>
 <button class="btn" id="addBtn">Add Product</button>
 <button class="btn" id="profileBtn">Profile</button>
@@ -56,6 +140,12 @@ let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
 let openaiKey = localStorage.getItem("openaiKey") || "";
+
+/* ===== MENU ===== */
+function toggleMenu(){
+  sidebar.classList.toggle("collapsed");
+  arrowControl.classList.toggle("active");
+}
 
 /* ===== THEME ===== */
 function toggleTheme(){
@@ -87,7 +177,7 @@ async function openLogin(){
   }catch(err){console.log(err);}
 }
 
-/* ===== OPENAI AI DESCRIPTION ===== */
+/* ===== AI DESCRIPTION ===== */
 async function generateAI(descPrompt){
   if(!openaiKey) return null;
   try{
@@ -100,7 +190,7 @@ async function generateAI(descPrompt){
       body:JSON.stringify({
         model:"gpt-4o-mini",
         messages:[
-          {role:"system",content:"Generate a product description in short and concise format."},
+          {role:"system",content:"Generate product title, description and 3 hashtags."},
           {role:"user",content:descPrompt}
         ]
       })
@@ -117,13 +207,20 @@ async function renderProducts(){
     const products = await res.json();
     const grid=document.getElementById("productGrid");
     grid.innerHTML="";
-    products.forEach(p=>{
+    let searchVal = document.getElementById("searchInput").value.toLowerCase();
+    let catVal = document.getElementById("categoryFilter").value;
+
+    products.filter(p=>{
+      return (catVal==="all"||p.cat===catVal) &&
+             (p.name||"").toLowerCase().includes(searchVal);
+    }).forEach(p=>{
       const card=document.createElement("div");
       card.className="card";
       card.innerHTML=`
         <h3>${p.name}</h3>
         <p>Price: ${p.price}</p>
         <p>By: ${p.owner}</p>
+        <p>${p.desc||""}</p>
       `;
       if(token){
         const followBtn=document.createElement("button");
@@ -158,11 +255,12 @@ async function openAdd(){
   }
   const price = prompt("Price");
   if(!price) return;
+  const category = prompt("Category (AI/SciFi/Other)","AI");
 
   await fetch(API_URL+"/products",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,desc,owner:currentUser})
+    body:JSON.stringify({name,price,desc,cat:category,owner:currentUser})
   });
   renderProducts();
 }
@@ -184,7 +282,7 @@ function followUser(user){
   if(!follows[currentUser]) follows[currentUser]=[];
   if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
   localStorage.setItem("follows",JSON.stringify(follows));
-  alert("Followed "+user);
+  renderProducts();
 }
 
 /* ===== PROFILE ===== */
@@ -203,7 +301,16 @@ async function openProfile(){
   });
 }
 
-/* ===== FOLLOW FEED ===== */
+/* ===== FOLLOW FEED + WEBSOCKET ===== */
+let socket;
+function initSocket(){
+  socket = new WebSocket("wss://nexora-backend-j2v3.onrender.com/feed");
+  socket.onmessage = function(event){
+    renderProducts(); // anlık update
+  }
+}
+
+/* ===== VIEW FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
   const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
@@ -224,9 +331,12 @@ document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
+document.getElementById("searchInput").onkeyup=renderProducts;
+document.getElementById("categoryFilter").onchange=renderProducts;
 
 /* ===== START ===== */
 renderProducts();
+initSocket();
 </script>
 </body>
 </html>
