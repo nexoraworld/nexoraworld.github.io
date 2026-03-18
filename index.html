@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.4 Quantum AI Core</title>
+<title>NEXORA v7.5 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -15,11 +15,19 @@ body{
   font-family:Arial, sans-serif;
   background:var(--dark);
   color:#fff;
+  transition:0.4s;
 }
 body.light{background:var(--light); color:#111;}
-.content{margin-left:220px; padding:30px;}
+.content{margin-left:220px; padding:30px; transition:0.4s;}
 .btn{
-  padding:10px 20px; border:none; border-radius:20px; background:#111; color:#fff; margin:5px; cursor:pointer; box-shadow:0 0 10px var(--cyan);
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  background:#111;
+  color:#fff;
+  margin:5px;
+  cursor:pointer;
+  box-shadow:0 0 10px var(--cyan);
 }
 .btn:hover{box-shadow:0 0 25px var(--cyan);}
 .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
@@ -28,14 +36,18 @@ body.light{background:var(--light); color:#111;}
 </style>
 </head>
 <body>
+
 <div class="content">
 <h2>NEXORA Quantum Core</h2>
+
 <button class="btn" id="loginBtn">Login / Register</button>
 <button class="btn" id="addBtn">Add Product</button>
 <button class="btn" id="profileBtn">Profile</button>
 <button class="btn" id="feedBtn">Follow Feed</button>
+
 <div class="grid" id="productGrid"></div>
 </div>
+
 <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 <script>
@@ -43,7 +55,9 @@ const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
+let openaiKey = localStorage.getItem("openaiKey") || "";
 
+/* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
@@ -73,12 +87,33 @@ async function openLogin(){
   }catch(err){console.log(err);}
 }
 
+/* ===== OPENAI AI DESCRIPTION ===== */
+async function generateAI(descPrompt){
+  if(!openaiKey) return null;
+  try{
+    const res = await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+openaiKey
+      },
+      body:JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[
+          {role:"system",content:"Generate a product description in short and concise format."},
+          {role:"user",content:descPrompt}
+        ]
+      })
+    });
+    const data = await res.json();
+    return data.choices ? data.choices[0].message.content : null;
+  } catch(err){console.log(err); return null;}
+}
+
 /* ===== RENDER PRODUCTS ===== */
 async function renderProducts(){
   try{
-    const res = await fetch(API_URL+"/products",{
-      headers: token?{"Authorization":"Bearer "+token}:{}
-    });
+    const res = await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}});
     const products = await res.json();
     const grid=document.getElementById("productGrid");
     grid.innerHTML="";
@@ -111,13 +146,23 @@ async function renderProducts(){
 /* ===== ADD PRODUCT ===== */
 async function openAdd(){
   if(!token) return alert("Login first");
-  const name=prompt("Product name");
-  const price=prompt("Price");
-  if(!name||!price) return;
+  const name = prompt("Product name");
+  if(!name) return;
+  const useAI = confirm("Generate description using AI?");
+  let desc = "";
+  if(useAI){
+    const idea = prompt("Describe your product idea briefly:");
+    desc = await generateAI(idea);
+  } else {
+    desc = prompt("Product description:");
+  }
+  const price = prompt("Price");
+  if(!price) return;
+
   await fetch(API_URL+"/products",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,owner:currentUser})
+    body:JSON.stringify({name,price,desc,owner:currentUser})
   });
   renderProducts();
 }
@@ -153,7 +198,7 @@ async function openProfile(){
   myProducts.forEach(p=>{
     const card=document.createElement("div");
     card.className="card";
-    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>${p.desc||""}</p>`;
     grid.appendChild(card);
   });
 }
@@ -169,7 +214,7 @@ async function viewFeed(){
   feed.forEach(p=>{
     const card=document.createElement("div");
     card.className="card";
-    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p><p>${p.desc||""}</p>`;
     grid.appendChild(card);
   });
 }
