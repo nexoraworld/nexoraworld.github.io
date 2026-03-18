@@ -3,30 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.7 Quantum AI Core</title>
+<title>NEXORA v7.8 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
   --light:#f5f1e6;
   --cyan:#00f2ff;
   --hover:#00ffff33;
+  --text-dark:#111;
+  --text-light:#fff;
 }
 body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:var(--dark);
-  color:#fff;
-  transition:0.4s;
-  overflow-x:hidden;
+  margin:0; font-family:Arial, sans-serif;
+  background:var(--dark); color:var(--text-light);
+  transition:0.4s; overflow-x:hidden;
 }
-body.light{background:var(--light); color:#111;}
+body.light{background:var(--light); color:var(--text-dark);}
+
 /* Sidebar */
 .sidebar{
-  position:fixed;
-  left:0; top:0;
-  height:100%; width:220px;
-  background:#111; padding-top:60px;
-  transition:0.4s;
+  position:fixed; left:0; top:0;
+  height:100%; width:220px; background:#111;
+  padding-top:60px; transition:0.4s; overflow:hidden;
 }
 .sidebar.collapsed{width:70px;}
 .arrow-control{
@@ -35,7 +33,7 @@ body.light{background:var(--light); color:#111;}
   display:flex; flex-direction:column;
   align-items:center; cursor:pointer; z-index:1000;
 }
-.arrow{font-size:22px;transition:0.4s;}
+.arrow{font-size:22px;transition:0.4s; color:var(--cyan);}
 .dots{display:flex; flex-direction:column; gap:8px; margin:10px 0; opacity:0; transition:0.4s;}
 .dot{width:8px; height:8px; border-radius:50%; animation:glow 1.5s infinite alternate;}
 .dot:nth-child(1){background:red;} .dot:nth-child(2){background:green;}
@@ -44,6 +42,8 @@ body.light{background:var(--light); color:#111;}
 .arrow-control.active .arrow:first-child{transform:translateY(-20px);}
 .arrow-control.active .arrow:last-child{transform:translateY(20px);}
 .arrow-control.active .dots{opacity:1;}
+
+/* Content */
 .content{margin-left:220px; padding:30px; transition:0.4s;}
 .sidebar.collapsed ~ .content{margin-left:70px;}
 
@@ -51,8 +51,7 @@ body.light{background:var(--light); color:#111;}
 .btn{
   padding:10px 20px; border:none; border-radius:20px;
   background:#111; color:#fff; margin:5px; cursor:pointer;
-  box-shadow:0 0 10px var(--cyan);
-  transition:0.3s;
+  box-shadow:0 0 10px var(--cyan); transition:0.3s;
 }
 .btn:hover{box-shadow:0 0 25px var(--cyan); background:var(--hover);}
 .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
@@ -67,6 +66,18 @@ body.light{background:var(--light); color:#111;}
 
 /* Inputs */
 input, select{padding:8px; margin:5px; border-radius:10px; border:none; outline:none; box-shadow:0 0 5px var(--cyan);}
+
+/* Drag drop style */
+.dragging{opacity:0.5; transform:scale(0.95); transition:0.2s;}
+
+/* Tooltip */
+.btn[title]:hover::after{
+  content: attr(title);
+  position:absolute; background:#111; color:#0ff;
+  padding:4px 8px; border-radius:5px;
+  top:-30px; left:50%; transform:translateX(-50%);
+  white-space:nowrap; font-size:12px; z-index:1000;
+}
 
 /* Responsive */
 @media(max-width:768px){
@@ -125,12 +136,17 @@ let openaiKey = localStorage.getItem("openaiKey") || "";
 function toggleMenu(){
   sidebar.classList.toggle("collapsed");
   arrowControl.classList.toggle("active");
+  setTimeout(renderProducts,300); // grid adaptasyonu
 }
 
 /* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
-  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
+  let isLight = document.body.classList.contains("light");
+  document.querySelector(".theme-toggle").textContent = isLight ? "☀" : "🌙";
+  document.querySelectorAll(".card").forEach(c=>{
+    c.style.color = isLight ? "var(--text-dark)" : "var(--text-light)";
+  });
 }
 
 /* ===== LOGIN / REGISTER ===== */
@@ -138,7 +154,6 @@ async function openLogin(){
   const username = prompt("Username:");
   const password = prompt("Password:");
   if(!username||!password) return alert("Enter both");
-
   try{
     const res = await fetch(API_URL+"/auth/login",{ 
       method:"POST", 
@@ -147,8 +162,7 @@ async function openLogin(){
     });
     const data = await res.json();
     if(data.token){
-      token = data.token;
-      currentUser=username;
+      token = data.token; currentUser=username;
       localStorage.setItem("token",token);
       localStorage.setItem("currentUser",currentUser);
       alert("Logged in!");
@@ -163,16 +177,10 @@ async function generateAI(descPrompt){
   try{
     const res = await fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+openaiKey
-      },
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+openaiKey},
       body:JSON.stringify({
         model:"gpt-4o-mini",
-        messages:[
-          {role:"system",content:"Generate product title, description and 3 hashtags in a JSON format {desc:'...',hashtags:['#tag1','#tag2','#tag3']}."},
-          {role:"user",content:descPrompt}
-        ]
+        messages:[{role:"system",content:"Generate product title, description and 3 hashtags in JSON {desc:'...',hashtags:['#tag1','#tag2','#tag3']}."},{role:"user",content:descPrompt}]
       })
     });
     const data = await res.json();
@@ -197,6 +205,7 @@ async function renderProducts(products=null){
   }).forEach(p=>{
     const card=document.createElement("div");
     card.className="card";
+    card.draggable=true;
     card.innerHTML=`
       <h3>${p.name}</h3>
       <p>Price: ${p.price}</p>
@@ -204,6 +213,10 @@ async function renderProducts(products=null){
       <p>${p.desc||""}</p>
       <div class="hashtags">${(p.hashtags||[]).join(' ')}</div>
     `;
+    // Drag-drop events
+    card.addEventListener('dragstart',()=>card.classList.add('dragging'));
+    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+
     if(token){
       const followBtn=document.createElement("button");
       followBtn.textContent="Follow";
@@ -226,38 +239,27 @@ async function renderProducts(products=null){
 /* ===== ADD PRODUCT ===== */
 async function openAdd(){
   if(!token) return alert("Login first");
-  const name = prompt("Product name");
-  if(!name) return;
+  const name = prompt("Product name"); if(!name) return;
   const useAI = confirm("Generate description and hashtags using AI?");
   let desc="", hashtags=[];
   if(useAI){
     const idea = prompt("Describe your product idea briefly:");
     const aiResult = await generateAI(idea);
-    desc = aiResult.desc;
-    hashtags = aiResult.hashtags;
+    desc = aiResult.desc; hashtags = aiResult.hashtags;
   } else {
     desc = prompt("Product description:");
     hashtags = prompt("Enter hashtags separated by commas","").split(",").map(t=>t.trim()).filter(t=>t);
   }
-  const price = prompt("Price");
-  if(!price) return;
+  const price = prompt("Price"); if(!price) return;
   const category = prompt("Category (AI/SciFi/Other)","AI");
-
-  await fetch(API_URL+"/products",{
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,desc,cat:category,owner:currentUser,hashtags})
-  });
+  await fetch(API_URL+"/products",{method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,desc,cat:category,owner:currentUser,hashtags})});
   renderProducts();
 }
 
 /* ===== DELETE PRODUCT ===== */
 async function deleteProduct(id){
   if(!token) return alert("Login first");
-  await fetch(API_URL+"/products/"+id,{
-    method:"DELETE",
-    headers:{"Authorization":"Bearer "+token}
-  });
+  await fetch(API_URL+"/products/"+id,{method:"DELETE", headers:{"Authorization":"Bearer "+token}});
   renderProducts();
 }
 
@@ -268,7 +270,7 @@ function followUser(user){
   if(!follows[currentUser]) follows[currentUser]=[];
   if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
   localStorage.setItem("follows",JSON.stringify(follows));
-  updateFeed(); // anlık feed update
+  updateFeed();
 }
 
 /* ===== PROFILE ===== */
@@ -288,14 +290,13 @@ function initSocket(){
     const data = JSON.parse(event.data);
     if(data.type==="new_product" || data.type==="update_product"){
       if(follows[currentUser]?.includes(data.owner)){
-        renderProducts([data]); // sadece yeni/updated feed item
+        renderProducts([data]);
       }
     }
   }
 }
-function updateFeed(){viewFeed();} // helper
+function updateFeed(){viewFeed();}
 
-/* ===== VIEW FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
   const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
