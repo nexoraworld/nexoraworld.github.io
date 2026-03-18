@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v8.3 Quantum AI Core</title>
+<title>NEXORA v8.4 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -28,7 +28,6 @@ body.light{
   color:var(--text-light);
 }
 .content{
-  margin-left:220px;
   padding:30px;
   transition:0.3s;
 }
@@ -36,10 +35,11 @@ body.light{
   position:fixed;
   left:0; top:0;
   width:220px; height:100%;
-  background:inherit; /* body ile aynı renk */
+  background:transparent; /* body ile aynı renk, çizgi yok */
   padding-top:60px;
   transition:0.4s;
   overflow:hidden;
+  z-index:1;
 }
 .sidebar.collapsed{width:70px;}
 .arrow-control{
@@ -105,7 +105,7 @@ body.light{
   border:1px solid var(--cyan);
   transition:0.3s;
   position:relative;
-  color:inherit; /* body ile aynı renk */
+  color:inherit;
 }
 .card:hover{box-shadow:0 0 25px var(--hover);}
 .theme-toggle{
@@ -143,7 +143,6 @@ body.light{
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <script>
-/* ===== STATE ===== */
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
@@ -151,19 +150,16 @@ let follows = JSON.parse(localStorage.getItem("follows")) || {};
 let ws=null;
 let menuOpen=true;
 
-/* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
-  document.querySelectorAll(".card").forEach(c=>{
-    c.style.color="inherit"; // body rengi ile eşitle
-  });
+  document.querySelectorAll(".card").forEach(c=>c.style.color="inherit");
 }
 
-/* ===== SIDEBAR ===== */
 const sidebar=document.getElementById("sidebar");
 const arrowControl=document.getElementById("arrowControl");
 const mainContent=document.getElementById("mainContent");
+
 function toggleMenu(){
   menuOpen=!menuOpen;
   sidebar.classList.toggle("collapsed");
@@ -174,7 +170,6 @@ function toggleMenu(){
   cards.forEach(c=>c.style.display=menuOpen?"grid-item":"none");
 }
 
-/* ===== LOGIN ===== */
 async function openLogin(){
   const username=prompt("Username:");
   const password=prompt("Password:");
@@ -194,16 +189,14 @@ async function openLogin(){
   }catch(err){console.log(err);}
 }
 
-/* ===== RENDER PRODUCTS ===== */
 async function renderProducts(){
   try{
-    const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}});
+    const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}} );
     const products=await res.json();
     const grid=document.getElementById("productGrid");
     grid.innerHTML="";
     const searchVal=document.getElementById("search").value.toLowerCase();
     const catVal=document.getElementById("categoryFilter").value;
-
     products.filter(p=> (catVal==="all"||p.cat===catVal) && (p.name.toLowerCase().includes(searchVal)))
     .forEach(p=>{
       const card=document.createElement("div");
@@ -214,7 +207,6 @@ async function renderProducts(){
         followBtn.textContent="Follow";
         followBtn.onclick=()=>followUser(p.owner);
         card.appendChild(followBtn);
-
         if(p.owner===currentUser){
           const delBtn=document.createElement("button");
           delBtn.textContent="Delete";
@@ -227,24 +219,23 @@ async function renderProducts(){
   }catch(err){console.log(err);}
 }
 
-/* ===== ADD PRODUCT ===== */
 async function openAdd(){
   if(!token) return alert("Login first");
   const name=prompt("Product name");
   const price=prompt("Price");
   if(!name||!price) return;
-  await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
+  const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
+  if(res.ok) alert("Product added!");
+  else alert("Error adding product!");
   renderProducts();
 }
 
-/* ===== DELETE PRODUCT ===== */
 async function deleteProduct(id){
   if(!token) return alert("Login first");
   await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}});
   renderProducts();
 }
 
-/* ===== FOLLOW ===== */
 function followUser(user){
   if(!currentUser) return alert("Login first");
   if(user===currentUser) return alert("Cannot follow yourself");
@@ -254,7 +245,6 @@ function followUser(user){
   alert("Followed "+user);
 }
 
-/* ===== PROFILE ===== */
 async function openProfile(){
   if(!token) return alert("Login first");
   const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
@@ -270,7 +260,6 @@ async function openProfile(){
   });
 }
 
-/* ===== FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
   const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
@@ -286,18 +275,15 @@ async function viewFeed(){
   });
 }
 
-/* ===== SEARCH & FILTER ===== */
 document.getElementById("search").onkeyup=renderProducts;
 document.getElementById("categoryFilter").onchange=renderProducts;
 
-/* ===== WEBSOCKET ===== */
 function initWebSocket(){
   if(ws) ws.close();
   ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");
   ws.onmessage=e=>renderProducts();
 }
 
-/* ===== EVENTS ===== */
 document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
