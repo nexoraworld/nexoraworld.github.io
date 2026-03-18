@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.6 Quantum AI Core</title>
+<title>NEXORA v7.7 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
   --light:#f5f1e6;
   --cyan:#00f2ff;
+  --hover:#00ffff33;
 }
 body{
   margin:0;
@@ -22,57 +23,28 @@ body.light{background:var(--light); color:#111;}
 /* Sidebar */
 .sidebar{
   position:fixed;
-  left:0;
-  top:0;
-  height:100%;
-  width:220px;
-  background:#111;
-  padding-top:60px;
+  left:0; top:0;
+  height:100%; width:220px;
+  background:#111; padding-top:60px;
   transition:0.4s;
 }
 .sidebar.collapsed{width:70px;}
 .arrow-control{
-  position:fixed;
-  left:0;
-  top:50%;
+  position:fixed; left:0; top:50%;
   transform:translateY(-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  cursor:pointer;
-  z-index:1000;
+  display:flex; flex-direction:column;
+  align-items:center; cursor:pointer; z-index:1000;
 }
 .arrow{font-size:22px;transition:0.4s;}
-.dots{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  margin:10px 0;
-  opacity:0;
-  transition:0.4s;
-}
-.dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  animation:glow 1.5s infinite alternate;
-}
-.dot:nth-child(1){background:red;}
-.dot:nth-child(2){background:green;}
-.dot:nth-child(3){background:yellow;}
-.dot:nth-child(4){background:purple;}
-@keyframes glow{
-  from{box-shadow:0 0 5px currentColor;}
-  to{box-shadow:0 0 20px currentColor;}
-}
+.dots{display:flex; flex-direction:column; gap:8px; margin:10px 0; opacity:0; transition:0.4s;}
+.dot{width:8px; height:8px; border-radius:50%; animation:glow 1.5s infinite alternate;}
+.dot:nth-child(1){background:red;} .dot:nth-child(2){background:green;}
+.dot:nth-child(3){background:yellow;} .dot:nth-child(4){background:purple;}
+@keyframes glow{from{box-shadow:0 0 5px currentColor;} to{box-shadow:0 0 20px currentColor;}}
 .arrow-control.active .arrow:first-child{transform:translateY(-20px);}
 .arrow-control.active .arrow:last-child{transform:translateY(20px);}
 .arrow-control.active .dots{opacity:1;}
-.content{
-  margin-left:220px;
-  padding:30px;
-  transition:0.4s;
-}
+.content{margin-left:220px; padding:30px; transition:0.4s;}
 .sidebar.collapsed ~ .content{margin-left:70px;}
 
 /* Buttons & grid */
@@ -80,12 +52,18 @@ body.light{background:var(--light); color:#111;}
   padding:10px 20px; border:none; border-radius:20px;
   background:#111; color:#fff; margin:5px; cursor:pointer;
   box-shadow:0 0 10px var(--cyan);
+  transition:0.3s;
 }
-.btn:hover{box-shadow:0 0 25px var(--cyan);}
+.btn:hover{box-shadow:0 0 25px var(--cyan); background:var(--hover);}
 .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
-.card{background:#111; padding:15px; border-radius:10px; border:1px solid var(--cyan);}
-.card button{margin-top:5px;}
-.theme-toggle{position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);}
+.card{
+  background:#111; padding:15px; border-radius:10px;
+  border:1px solid var(--cyan); transition:0.3s; position:relative;
+}
+.card:hover{box-shadow:0 0 20px var(--cyan); transform:translateY(-3px);}
+.card button{margin-top:5px; cursor:pointer; transition:0.3s;}
+.card button:hover{background:var(--hover);}
+.card .hashtags{margin-top:5px; font-size:12px; color:#0ff;}
 
 /* Inputs */
 input, select{padding:8px; margin:5px; border-radius:10px; border:none; outline:none; box-shadow:0 0 5px var(--cyan);}
@@ -95,6 +73,7 @@ input, select{padding:8px; margin:5px; border-radius:10px; border:none; outline:
   .content{margin-left:0; padding:15px;}
   .sidebar{width:70px;}
 }
+.theme-toggle{position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);}
 </style>
 </head>
 <body>
@@ -121,13 +100,14 @@ input, select{padding:8px; margin:5px; border-radius:10px; border:none; outline:
   <option value="all">All Categories</option>
   <option value="AI">AI</option>
   <option value="SciFi">SciFi</option>
+  <option value="Other">Other</option>
 </select>
 
 <!-- Main buttons -->
-<button class="btn" id="loginBtn">Login / Register</button>
-<button class="btn" id="addBtn">Add Product</button>
-<button class="btn" id="profileBtn">Profile</button>
-<button class="btn" id="feedBtn">Follow Feed</button>
+<button class="btn" id="loginBtn" title="Login or register">Login / Register</button>
+<button class="btn" id="addBtn" title="Add a new product with AI options">Add Product</button>
+<button class="btn" id="profileBtn" title="View your products">Profile</button>
+<button class="btn" id="feedBtn" title="See your follow feed">Follow Feed</button>
 
 <div class="grid" id="productGrid"></div>
 </div>
@@ -177,9 +157,9 @@ async function openLogin(){
   }catch(err){console.log(err);}
 }
 
-/* ===== AI DESCRIPTION ===== */
+/* ===== AI DESCRIPTION + HASHTAGS ===== */
 async function generateAI(descPrompt){
-  if(!openaiKey) return null;
+  if(!openaiKey) return {desc:descPrompt,hashtags:[]};
   try{
     const res = await fetch("https://api.openai.com/v1/chat/completions",{
       method:"POST",
@@ -190,54 +170,57 @@ async function generateAI(descPrompt){
       body:JSON.stringify({
         model:"gpt-4o-mini",
         messages:[
-          {role:"system",content:"Generate product title, description and 3 hashtags."},
+          {role:"system",content:"Generate product title, description and 3 hashtags in a JSON format {desc:'...',hashtags:['#tag1','#tag2','#tag3']}."},
           {role:"user",content:descPrompt}
         ]
       })
     });
     const data = await res.json();
-    return data.choices ? data.choices[0].message.content : null;
-  } catch(err){console.log(err); return null;}
+    const content = data.choices?.[0]?.message?.content;
+    return content ? JSON.parse(content.replace(/'/g,'"')) : {desc:descPrompt,hashtags:[]};
+  } catch(err){console.log(err); return {desc:descPrompt,hashtags:[]};}
 }
 
 /* ===== RENDER PRODUCTS ===== */
-async function renderProducts(){
-  try{
-    const res = await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}});
-    const products = await res.json();
-    const grid=document.getElementById("productGrid");
-    grid.innerHTML="";
-    let searchVal = document.getElementById("searchInput").value.toLowerCase();
-    let catVal = document.getElementById("categoryFilter").value;
+async function renderProducts(products=null){
+  if(!products){
+    const res = await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}}).catch(()=>[]);
+    products = await res.json().catch(()=>[]);
+  }
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  let searchVal = document.getElementById("searchInput").value.toLowerCase();
+  let catVal = document.getElementById("categoryFilter").value;
 
-    products.filter(p=>{
-      return (catVal==="all"||p.cat===catVal) &&
-             (p.name||"").toLowerCase().includes(searchVal);
-    }).forEach(p=>{
-      const card=document.createElement("div");
-      card.className="card";
-      card.innerHTML=`
-        <h3>${p.name}</h3>
-        <p>Price: ${p.price}</p>
-        <p>By: ${p.owner}</p>
-        <p>${p.desc||""}</p>
-      `;
-      if(token){
-        const followBtn=document.createElement("button");
-        followBtn.textContent="Follow";
-        followBtn.onclick=()=>followUser(p.owner);
-        card.appendChild(followBtn);
+  products.filter(p=>{
+    return (catVal==="all"||p.cat===catVal) && (p.name||"").toLowerCase().includes(searchVal);
+  }).forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <h3>${p.name}</h3>
+      <p>Price: ${p.price}</p>
+      <p>By: ${p.owner}</p>
+      <p>${p.desc||""}</p>
+      <div class="hashtags">${(p.hashtags||[]).join(' ')}</div>
+    `;
+    if(token){
+      const followBtn=document.createElement("button");
+      followBtn.textContent="Follow";
+      followBtn.onclick=()=>followUser(p.owner);
+      followBtn.title="Follow this user";
+      card.appendChild(followBtn);
 
-        if(p.owner===currentUser){
-          const delBtn=document.createElement("button");
-          delBtn.textContent="Delete";
-          delBtn.onclick=()=>deleteProduct(p._id);
-          card.appendChild(delBtn);
-        }
+      if(p.owner===currentUser){
+        const delBtn=document.createElement("button");
+        delBtn.textContent="Delete";
+        delBtn.onclick=()=>deleteProduct(p._id);
+        delBtn.title="Delete your product";
+        card.appendChild(delBtn);
       }
-      grid.appendChild(card);
-    });
-  }catch(err){console.log(err);}
+    }
+    grid.appendChild(card);
+  });
 }
 
 /* ===== ADD PRODUCT ===== */
@@ -245,13 +228,16 @@ async function openAdd(){
   if(!token) return alert("Login first");
   const name = prompt("Product name");
   if(!name) return;
-  const useAI = confirm("Generate description using AI?");
-  let desc = "";
+  const useAI = confirm("Generate description and hashtags using AI?");
+  let desc="", hashtags=[];
   if(useAI){
     const idea = prompt("Describe your product idea briefly:");
-    desc = await generateAI(idea);
+    const aiResult = await generateAI(idea);
+    desc = aiResult.desc;
+    hashtags = aiResult.hashtags;
   } else {
     desc = prompt("Product description:");
+    hashtags = prompt("Enter hashtags separated by commas","").split(",").map(t=>t.trim()).filter(t=>t);
   }
   const price = prompt("Price");
   if(!price) return;
@@ -260,7 +246,7 @@ async function openAdd(){
   await fetch(API_URL+"/products",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,desc,cat:category,owner:currentUser})
+    body:JSON.stringify({name,price,desc,cat:category,owner:currentUser,hashtags})
   });
   renderProducts();
 }
@@ -282,7 +268,7 @@ function followUser(user){
   if(!follows[currentUser]) follows[currentUser]=[];
   if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
   localStorage.setItem("follows",JSON.stringify(follows));
-  renderProducts();
+  updateFeed(); // anlık feed update
 }
 
 /* ===== PROFILE ===== */
@@ -291,14 +277,7 @@ async function openProfile(){
   const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
   const products = await res.json();
   const myProducts = products.filter(p=>p.owner===currentUser);
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
-  myProducts.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>${p.desc||""}</p>`;
-    grid.appendChild(card);
-  });
+  renderProducts(myProducts);
 }
 
 /* ===== FOLLOW FEED + WEBSOCKET ===== */
@@ -306,24 +285,23 @@ let socket;
 function initSocket(){
   socket = new WebSocket("wss://nexora-backend-j2v3.onrender.com/feed");
   socket.onmessage = function(event){
-    renderProducts(); // anlık update
+    const data = JSON.parse(event.data);
+    if(data.type==="new_product" || data.type==="update_product"){
+      if(follows[currentUser]?.includes(data.owner)){
+        renderProducts([data]); // sadece yeni/updated feed item
+      }
+    }
   }
 }
+function updateFeed(){viewFeed();} // helper
 
 /* ===== VIEW FEED ===== */
 async function viewFeed(){
   if(!token) return alert("Login first");
   const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
   const products = await res.json();
-  const grid=document.getElementById("productGrid");
-  grid.innerHTML="";
   const feed = products.filter(p=>follows[currentUser]?.includes(p.owner));
-  feed.forEach(p=>{
-    const card=document.createElement("div");
-    card.className="card";
-    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p><p>${p.desc||""}</p>`;
-    grid.appendChild(card);
-  });
+  renderProducts(feed);
 }
 
 /* ===== EVENTS ===== */
