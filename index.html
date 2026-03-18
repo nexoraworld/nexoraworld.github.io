@@ -3,162 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v7.5 Quantum AI Core</title>
+<title>NEXORA v7.4 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
   --light:#f5f1e6;
   --cyan:#00f2ff;
-  --hover:#0ff;
 }
 body{
   margin:0;
   font-family:Arial, sans-serif;
   background:var(--dark);
   color:#fff;
-  transition:0.4s;
 }
 body.light{background:var(--light); color:#111;}
-.sidebar{
-  position:fixed;
-  left:0; top:0; height:100%; width:220px;
-  background:#111; padding-top:60px; transition:0.4s;
-}
-.sidebar.collapsed{width:70px;}
-.arrow-control{
-  position:fixed; left:0; top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; align-items:center; cursor:pointer; z-index:1000;
-}
-.arrow{font-size:22px;transition:0.4s; margin:2px 0;}
-.arrow-control .line{width:2px; height:100px; background:white; margin:5px 0; position:relative; overflow:hidden;}
-.line::after{
-  content:""; position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(white,transparent);
-  animation:slideLine 1s linear infinite;
-}
-@keyframes slideLine{
-  0%{transform:translateY(-100%);}
-  100%{transform:translateY(100%);}
-}
-.content{margin-left:220px; padding:30px; transition:0.4s;}
-.sidebar.collapsed ~ .content{margin-left:70px;}
+.content{margin-left:220px; padding:30px;}
 .btn{
-  padding:10px 20px; border:none; border-radius:20px; background:#111; color:#fff;
-  margin:5px; cursor:pointer; box-shadow:0 0 10px var(--cyan);
+  padding:10px 20px; border:none; border-radius:20px; background:#111; color:#fff; margin:5px; cursor:pointer; box-shadow:0 0 10px var(--cyan);
 }
-.btn:hover{box-shadow:0 0 25px var(--hover);}
+.btn:hover{box-shadow:0 0 25px var(--cyan);}
 .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px;}
 .card{background:#111; padding:15px; border-radius:10px; border:1px solid var(--cyan);}
 .theme-toggle{position:fixed; bottom:20px; right:20px; width:60px; height:60px; border-radius:50%; font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);}
-input,select{padding:8px;margin:5px;}
 </style>
 </head>
 <body>
-<div class="sidebar" id="sidebar">
-  <div class="arrow-control" id="arrowControl" onclick="toggleMenuBoth()">
-    <div class="arrow" id="upArrow">▲</div>
-    <div class="line"></div>
-    <div class="arrow" id="downArrow">▼</div>
-  </div>
-</div>
 <div class="content">
 <h2>NEXORA Quantum Core</h2>
-<div>
-<select id="categoryFilter">
-  <option value="all">All Categories</option>
-  <option value="AI">AI</option>
-  <option value="SciFi">SciFi</option>
-  <option value="Other">Other</option>
-</select>
-<input id="search" placeholder="Search products...">
 <button class="btn" id="loginBtn">Login / Register</button>
 <button class="btn" id="addBtn">Add Product</button>
 <button class="btn" id="profileBtn">Profile</button>
 <button class="btn" id="feedBtn">Follow Feed</button>
-</div>
 <div class="grid" id="productGrid"></div>
 </div>
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 <script>
 const API_URL="https://nexora-backend-j2v3.onrender.com";
-let token=localStorage.getItem("token")||null;
-let currentUser=localStorage.getItem("currentUser")||null;
-let follows=JSON.parse(localStorage.getItem("follows"))||{};
-let ws;
+let token = localStorage.getItem("token") || null;
+let currentUser = localStorage.getItem("currentUser") || null;
+let follows = JSON.parse(localStorage.getItem("follows")) || {};
 
-// ====== THEME ======
+// ===== THEME =====
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
 }
 
-// ====== SIDEBAR ======
-function toggleMenuBoth(){
-  sidebar.classList.toggle("collapsed");
-  const arrows=document.querySelectorAll(".arrow");
-  arrows.forEach(a=>a.classList.toggle("active"));
-  const cards=document.querySelectorAll(".card,.btn");
-  cards.forEach(c=>{
-    if(sidebar.classList.contains("collapsed")) c.style.display="";
-    else c.style.display="none";
-  });
-}
-
-// ====== LOGIN ======
+// ===== LOGIN / REGISTER =====
 async function openLogin(){
-  const username=prompt("Username:");
-  const password=prompt("Password:");
+  const username = prompt("Username:");
+  const password = prompt("Password:");
   if(!username||!password) return alert("Enter both");
   try{
-    const res=await fetch(API_URL+"/auth/login",{ 
+    const res = await fetch(API_URL+"/auth/login",{ 
       method:"POST", 
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({username,password})
     });
-    const data=await res.json();
+    const data = await res.json();
     if(data.token){
-      token=data.token; currentUser=username;
+      token = data.token;
+      currentUser=username;
       localStorage.setItem("token",token);
       localStorage.setItem("currentUser",currentUser);
       alert("Logged in!");
-      connectWebSocket();
       renderProducts();
     } else alert(data.message||"Login failed");
   }catch(err){console.log(err);}
 }
 
-// ====== WEBSOCKET ======
-function connectWebSocket(){
-  if(ws) ws.close();
-  ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");
-  ws.onmessage=e=>{
-    const msg=JSON.parse(e.data);
-    if(msg.type==="new_product") renderProducts();
-  }
-}
-
-// ====== RENDER PRODUCTS ======
+// ===== RENDER PRODUCTS =====
 async function renderProducts(){
   try{
-    const res=await fetch(API_URL+"/products",{
+    const res = await fetch(API_URL+"/products",{
       headers: token?{"Authorization":"Bearer "+token}:{}
     });
-    const products=await res.json();
+    const products = await res.json();
     const grid=document.getElementById("productGrid");
     grid.innerHTML="";
-    const searchVal=document.getElementById("search").value.toLowerCase();
-    const catVal=document.getElementById("categoryFilter").value;
-    products.filter(p=>{
-      return (catVal==="all"||p.cat===catVal)&&(p.name||"").toLowerCase().includes(searchVal);
-    }).forEach(p=>{
+    products.forEach(p=>{
       const card=document.createElement("div");
       card.className="card";
-      card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+      card.innerHTML=`
+        <h3>${p.name}</h3>
+        <p>Price: ${p.price}</p>
+        <p>By: ${p.owner}</p>
+      `;
       if(token){
         const followBtn=document.createElement("button");
         followBtn.textContent="Follow";
         followBtn.onclick=()=>followUser(p.owner);
         card.appendChild(followBtn);
+
         if(p.owner===currentUser){
           const delBtn=document.createElement("button");
           delBtn.textContent="Delete";
@@ -171,28 +108,21 @@ async function renderProducts(){
   }catch(err){console.log(err);}
 }
 
-// ====== ADD PRODUCT ======
+// ===== ADD PRODUCT =====
 async function openAdd(){
   if(!token) return alert("Login first");
   const name=prompt("Product name");
-  const cat=prompt("Category (AI/SciFi/Other)");
-  let desc;
-  const useAI=confirm("Use AI for description & hashtags?");
-  if(useAI){
-    const idea=prompt("Describe your product idea:");
-    desc=await generateAI(idea);
-  } else desc=prompt("Description");
   const price=prompt("Price");
   if(!name||!price) return;
   await fetch(API_URL+"/products",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({name,price,owner:currentUser,cat,desc})
+    body:JSON.stringify({name,price,owner:currentUser})
   });
   renderProducts();
 }
 
-// ====== DELETE PRODUCT ======
+// ===== DELETE PRODUCT =====
 async function deleteProduct(id){
   if(!token) return alert("Login first");
   await fetch(API_URL+"/products/"+id,{
@@ -202,7 +132,7 @@ async function deleteProduct(id){
   renderProducts();
 }
 
-// ====== FOLLOW ======
+// ===== FOLLOW =====
 function followUser(user){
   if(!currentUser) return alert("Login first");
   if(user===currentUser) return alert("Cannot follow yourself");
@@ -212,12 +142,12 @@ function followUser(user){
   alert("Followed "+user);
 }
 
-// ====== PROFILE ======
+// ===== PROFILE =====
 async function openProfile(){
   if(!token) return alert("Login first");
-  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
-  const products=await res.json();
-  const myProducts=products.filter(p=>p.owner===currentUser);
+  const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products = await res.json();
+  const myProducts = products.filter(p=>p.owner===currentUser);
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
   myProducts.forEach(p=>{
@@ -228,14 +158,14 @@ async function openProfile(){
   });
 }
 
-// ====== FOLLOW FEED ======
+// ===== FOLLOW FEED =====
 async function viewFeed(){
   if(!token) return alert("Login first");
-  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
-  const products=await res.json();
-  const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));
+  const res = await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products = await res.json();
   const grid=document.getElementById("productGrid");
   grid.innerHTML="";
+  const feed = products.filter(p=>follows[currentUser]?.includes(p.owner));
   feed.forEach(p=>{
     const card=document.createElement("div");
     card.className="card";
@@ -244,36 +174,13 @@ async function viewFeed(){
   });
 }
 
-// ====== AI GENERATION ======
-async function generateAI(promptText){
-  if(!token) return alert("Login first");
-  const response=await fetch("https://api.openai.com/v1/chat/completions",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+localStorage.getItem("openaiKey")
-    },
-    body:JSON.stringify({
-      model:"gpt-4o-mini",
-      messages:[
-        {role:"system",content:"Generate product title, description and 3 hashtags"},
-        {role:"user",content:promptText}
-      ]
-    })
-  });
-  const data=await response.json();
-  return data.choices?data.choices[0].message.content:"AI generation failed";
-}
-
-// ====== EVENTS ======
+// ===== EVENTS =====
 document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
-document.getElementById("categoryFilter").onchange=renderProducts;
-document.getElementById("search").onkeyup=renderProducts;
 
-// ====== START ======
+// ===== START =====
 renderProducts();
 </script>
 </body>
