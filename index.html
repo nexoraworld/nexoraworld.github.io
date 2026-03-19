@@ -111,12 +111,14 @@ select, input{
     <h3>Add Product</h3>
     <input id="modalName" placeholder="Product Name">
     <input id="modalPrice" placeholder="Price">
-    <button onclick="submitProduct()">Add</button>
-    <button onclick="closeModal()">Cancel</button>
+    <button id="modalAddBtn">Add</button>
+    <button id="modalCancelBtn">Cancel</button>
   </div>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded",()=>{
+
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token=localStorage.getItem("token")||null;
 let currentUser=localStorage.getItem("currentUser")||null;
@@ -185,9 +187,11 @@ async function submitProduct(){
   const name=document.getElementById("modalName").value;
   const price=document.getElementById("modalPrice").value;
   if(!name||!price)return alert("Enter both fields");
-  const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
-  if(res.ok){alert("Product added!");closeModal();renderProducts();}
-  else alert("Error adding product!");
+  try{
+    const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
+    if(res.ok){alert("Product added!");closeModal();renderProducts();}
+    else alert("Error adding product!");
+  }catch(err){console.log(err);}
 }
 
 // DELETE
@@ -214,10 +218,14 @@ document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
+document.getElementById("modalAddBtn").onclick=submitProduct;
+document.getElementById("modalCancelBtn").onclick=closeModal;
 
 // START
 renderProducts();
 if(token)initWebSocket();
+
+});
 </script>
 
 </body>
