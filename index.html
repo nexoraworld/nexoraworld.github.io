@@ -3,278 +3,363 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA</title>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
+<title>NEXORA v8.5 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
   --light:#f5f1e6;
-  --cyan:#ffffff;
-  --card:#1a1a1f;
-  --cardLight:#eaeaea;
+  --cyan:#00f2ff;
+  --hover:#0ff;
+  --card-bg:#eee;
+  --card-bg-dark:#333;
+  --card-text:#000;
+  --card-text-dark:#fff;
 }
-body{margin:0;font-family:Arial;background:var(--dark);color:#fff;}
-body.light{background:var(--light);color:#111;}
-
-.content{padding:25px;}
-.btn{margin:10px;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
-
-.card{background:var(--card);padding:15px;border-radius:10px;}
-body.light .card{background:var(--cardLight);}
-
-/* SEARCH */
-.searchBox{position:relative;display:inline-block;}
-.searchBox input{padding:8px;width:200px;}
-.searchBox span{position:absolute;right:8px;top:6px;cursor:pointer;}
-
-/* THEME */
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:var(--dark);
+  color:var(--card-text-dark);
+  transition:0.3s;
+  overflow-x:hidden;
+}
+body.light{
+  background:var(--light);
+  color:var(--card-text);
+}
+.content{
+  padding:15px;
+  transition:0.3s;
+}
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:5px;
+  padding:8px 10px;
+  transition:0.2s;
+}
+button:hover{
+  opacity:0.9;
+}
+/* ================= GRID ================= */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:15px;
+}
+.card{
+  background:var(--card-bg-dark);
+  color:var(--card-text-dark);
+  padding:15px;
+  border-radius:10px;
+  border:1px solid var(--cyan);
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  transition:0.3s;
+}
+body.light .card{
+  background:var(--card-bg);
+  color:var(--card-text);
+}
+.card button.followBtn{
+  background:#00bfff;
+  color:#fff;
+}
+.card button.deleteBtn{
+  background:#ff5050;
+  color:#fff;
+}
+/* ================= FIXED BUTTONS ================= */
+.fixed-buttons{
+  position:fixed;
+  top:10px; left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  z-index:1000;
+}
+/* ================= THEME BUTTON ================= */
 .theme-toggle{
-position:fixed;bottom:20px;right:20px;
-width:60px;height:60px;border-radius:50%;
-background:#fff;color:#000;font-size:22px;
+  position:fixed;
+  bottom:10px; right:10px;
+  width:50px;height:50px;
+  border-radius:50%;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:0 0 15px var(--cyan);
+  z-index:1000;
 }
-
-/* MODAL */
+/* ================= SEARCH BAR ================= */
+.input-wrapper{
+  position:relative;
+  display:flex;
+  align-items:center;
+  width:100%;
+  max-width:220px;
+  margin:10px 0;
+}
+.input-wrapper input{
+  padding:8px;
+  width:100%;
+  box-sizing:border-box;
+  border-radius:5px;
+  border:1px solid #ccc;
+}
+.input-wrapper #searchClear{
+  position:absolute;
+  right:5px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  color:#888;
+}
+.input-wrapper #searchClear:hover{
+  color:#000;
+}
+/* ================= MODAL ================= */
 .modal-backdrop{
-display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.6);
-justify-content:center;align-items:center;
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  justify-content:center;
+  align-items:center;
+  z-index:2000;
 }
 .modal{
-background:#222;padding:20px;border-radius:10px;width:300px;position:relative;
+  background:var(--card-bg-dark);
+  padding:20px;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:90%;
+  max-width:300px;
+  color:var(--card-text-dark);
 }
-body.light .modal{background:#fff;color:#000;}
-.close{position:absolute;right:10px;top:10px;cursor:pointer;}
+body.light .modal{
+  background:var(--card-bg);
+  color:var(--card-text);
+}
+.modal input{
+  padding:8px;
+  border-radius:5px;
+  border:1px solid var(--cyan);
+  width:100%;
+}
+.modal input:focus{
+  outline:none;
+  border-color:var(--hover);
+}
+.modal button{
+  background:var(--cyan);
+  color:#000;
+}
+.character-box{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  display:flex;
+  gap:2px;
+  color:gray;
+  pointer-events:none;
+}
 
-/* INPUT EFFECT */
-.input-wrap{position:relative;}
-.input-wrap input{width:100%;padding:8px;}
-.fake{
-position:absolute;right:5px;top:5px;font-size:12px;opacity:0.6;
+/* ================= RESPONSIVE ================= */
+@media(max-width:600px){
+  .grid{
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+    gap:10px;
+  }
+  .fixed-buttons{
+    top:5px;
+    gap:3px;
+  }
+  .theme-toggle{
+    width:40px;
+    height:40px;
+    font-size:20px;
+  }
 }
 </style>
 </head>
-
 <body>
+<div class="fixed-buttons">
+  <button id="loginBtn">Login / Register</button>
+  <button id="addBtn">Add Product</button>
+  <button id="profileBtn">Profile</button>
+  <button id="feedBtn">Follow Feed</button>
+</div>
 
 <div class="content">
+  <h2>NEXORA Quantum Core</h2>
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+    <option value="AI">AI</option>
+    <option value="SciFi">SciFi</option>
+    <option value="Other">Other</option>
+  </select>
+  <div class="input-wrapper">
+    <input id="search" placeholder="Search...">
+    <span id="searchClear">×</span>
+  </div>
 
-<h2>NEXORA</h2>
-
-<button class="btn" onclick="openLogin()">Login</button>
-<button class="btn" onclick="openAdd()">Add Product</button>
-
-<div class="searchBox">
-<input id="search" placeholder="Search...">
-<span onclick="clearSearch()">×</span>
+  <div class="grid" id="productGrid"></div>
 </div>
 
-<div class="grid" id="productGrid"></div>
+<button class="theme-toggle" id="themeBtn">🌙</button>
 
-</div>
-
-<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-
-<!-- LOGIN -->
-<div class="modal-backdrop" id="loginModal">
-<div class="modal">
-<div class="close" onclick="closeLogin()">✖</div>
-
-<h3>Login</h3>
-
-<div class="input-wrap">
-<input id="loginUser" oninput="fakeUser(this)">
-<div class="fake" id="fakeUser"></div>
-</div>
-
-<div class="input-wrap">
-<input type="password" id="loginPass" maxlength="9" oninput="fakePass(this)">
-<div class="fake" id="fakePass"></div>
-</div>
-
-<button onclick="doLogin()">Giriş</button>
-<button onclick="doRegister()">Kayıt Ol</button>
-
-</div>
-</div>
-
-<!-- ADD -->
-<div class="modal-backdrop" id="addModal">
-<div class="modal">
-<div class="close" onclick="closeAdd()">✖</div>
-
-<input id="modalName" placeholder="Ürün adı">
-<input id="modalPrice" placeholder="Fiyat">
-
-<button onclick="submitProduct()">Ekle</button>
-
-</div>
+<!-- Modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3>Add Product</h3>
+    <input id="modalName" placeholder="Product Name">
+    <input id="modalPrice" placeholder="Price">
+    <button onclick="submitProduct()">Add</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
 </div>
 
 <script>
-// FIREBASE CONFIG
-firebase.initializeApp({
-  apiKey: "AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
-  authDomain: "nexora-8af81.firebaseapp.com",
-  projectId: "nexora-8af81"
-});
-const auth = firebase.auth();
-
 const API_URL="https://nexora-backend-j2v3.onrender.com";
+let token = localStorage.getItem("token") || null;
+let currentUser = localStorage.getItem("currentUser") || null;
+let follows = JSON.parse(localStorage.getItem("follows")) || {};
+let ws=null;
 
-let token=null;
-let currentUser=null;
-
-// THEME
+/* THEME */
 function toggleTheme(){
   document.body.classList.toggle("light");
-}
-
-// SEARCH
-function clearSearch(){
-  search.value="";
-  renderProducts();
-}
-search.oninput=renderProducts;
-
-// INPUT EFFECT
-function fakeUser(el){
-  document.getElementById("fakeUser").innerText =
-    el.value.split("").map(c=>c.toLowerCase()).join("");
-}
-function fakePass(el){
-  document.getElementById("fakePass").innerText =
-    el.value.split("").map(()=>"*").join("");
-}
-
-// LOGIN UI
-function openLogin(){loginModal.style.display="flex";}
-function closeLogin(){loginModal.style.display="none";}
-
-// REGISTER (FIXED)
-function doRegister(){
-  const user=loginUser.value.trim();
-  const pass=loginPass.value.trim();
-
-  if(!user.includes("@")){
-    alert("Geçerli Gmail gir!");
-    return;
-  }
-
-  if(pass.length>9){
-    alert("Şifre max 9 karakter!");
-    return;
-  }
-
-  auth.createUserWithEmailAndPassword(user,pass)
-  .then((cred)=>{
-    cred.user.sendEmailVerification();
-    alert("📩 Mail gönderildi!");
-  })
-  .catch(e=>alert(e.message));
-}
-
-// LOGIN
-async function doLogin(){
-  const user=loginUser.value.trim();
-  const pass=loginPass.value.trim();
-
-  try{
-    const cred=await auth.signInWithEmailAndPassword(user,pass);
-
-    if(!cred.user.emailVerified){
-      alert("Mail doğrula!");
-      return;
+  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
+  document.querySelectorAll(".card").forEach(c=>{
+    if(document.body.classList.contains("light")){
+      c.style.background="#eee"; c.style.color="#000";
+      c.querySelectorAll("button.followBtn").forEach(b=>b.style.background="#00bfff");
+    } else {
+      c.style.background="#444"; c.style.color="#fff";
+      c.querySelectorAll("button.followBtn").forEach(b=>b.style.background="#1e90ff");
     }
-
-    const res=await fetch(API_URL+"/auth/login",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({username:user,password:pass})
-    });
-
-    const data=await res.json();
-
-    if(data.token){
-      token=data.token;
-      currentUser=user;
-      renderProducts();
-      closeLogin();
-      alert("Giriş başarılı");
-    }
-
-  }catch(e){alert(e.message);}
-}
-
-// ADD
-function openAdd(){
-  if(!token)return openLogin();
-  addModal.style.display="flex";
-}
-function closeAdd(){addModal.style.display="none";}
-
-async function submitProduct(){
-  await fetch(API_URL+"/products",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+token
-    },
-    body:JSON.stringify({
-      name:modalName.value,
-      price:modalPrice.value,
-      owner:currentUser
-    })
   });
-  closeAdd();
-  renderProducts();
+  document.querySelectorAll(".modal").forEach(m=>{
+    if(document.body.classList.contains("light")){m.style.background="#eee"; m.style.color="#000";}
+    else{m.style.background="#444"; m.style.color="#fff";}
+  });
 }
 
-// PRODUCTS
+/* LOGIN */
+async function openLogin(){
+  const loginModal=document.createElement("div");
+  loginModal.style.position="fixed";
+  loginModal.style.top="50%";
+  loginModal.style.left="50%";
+  loginModal.style.transform="translate(-50%,-50%)";
+  loginModal.style.background=document.body.classList.contains("light")?"#eee":"#333";
+  loginModal.style.color=document.body.classList.contains("light")?"#000":"#fff";
+  loginModal.style.padding="20px";
+  loginModal.style.borderRadius="10px";
+  loginModal.style.zIndex=3000;
+  loginModal.innerHTML=`
+    <h3>Login</h3>
+    <div style="position:relative;">
+      <input id="loginUser" placeholder="Username" style="padding-right:50px;">
+      <div class="character-box" id="userChars"></div>
+    </div>
+    <div style="position:relative; margin-top:10px;">
+      <input id="loginPass" placeholder="Password" type="password" style="padding-right:50px;">
+      <div class="character-box" id="passChars"></div>
+    </div>
+    <button id="loginSubmit">Login</button>
+    <button id="loginCancel">Cancel</button>
+  `;
+  document.body.appendChild(loginModal);
+
+  const userInput=document.getElementById("loginUser");
+  const passInput=document.getElementById("loginPass");
+  const userBox=document.getElementById("userChars");
+  const passBox=document.getElementById("passChars");
+
+  userInput.oninput=e=>{
+    userBox.innerHTML="";
+    for(let ch of e.target.value){
+      let span=document.createElement("span"); span.textContent=ch; span.style.fontSize="10px"; userBox.appendChild(span);
+    }
+  };
+  passInput.oninput=e=>{
+    passBox.innerHTML="";
+    for(let ch of e.target.value){
+      let span=document.createElement("span"); span.textContent=ch; span.style.fontSize="10px"; passBox.appendChild(span);
+    }
+  };
+
+  document.getElementById("loginSubmit").onclick=async ()=>{
+    const username=userInput.value;
+    const password=passInput.value;
+    if(!username||!password)return alert("Enter both");
+    try{
+      const res=await fetch(API_URL+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
+      const data=await res.json();
+      if(data.token){
+        token=data.token; currentUser=username;
+        localStorage.setItem("token",token);
+        localStorage.setItem("currentUser",currentUser);
+        alert("Logged in!"); renderProducts(); initWebSocket();
+        document.body.removeChild(loginModal);
+      } else alert(data.message||"Login failed");
+    } catch(err){console.log(err);}
+  };
+  document.getElementById("loginCancel").onclick=()=>document.body.removeChild(loginModal);
+}
+
+/* PRODUCTS */
 async function renderProducts(){
-  const res=await fetch(API_URL+"/products");
-  const products=await res.json();
-
-  productGrid.innerHTML="";
-
-  products.forEach(p=>{
-    const c=document.createElement("div");
-    c.className="card";
-
-    c.innerHTML=`<h3>${p.name}</h3><p>${p.price}</p><p>${p.owner}</p>`;
-
-    const d=document.createElement("button");
-    d.innerText="Delete";
-    d.onclick=()=>deleteProduct(p._id);
-
-    const f=document.createElement("button");
-    f.innerText="Follow";
-
-    c.appendChild(d);
-    c.appendChild(f);
-
-    productGrid.appendChild(c);
-  });
+  try{
+    const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}} );
+    const products=await res.json();
+    const grid=document.getElementById("productGrid");
+    grid.innerHTML="";
+    const searchVal=document.getElementById("search").value.toLowerCase();
+    const catVal=document.getElementById("categoryFilter").value;
+    products.filter(p=> (catVal==="all"||p.cat===catVal) && p.name.toLowerCase().includes(searchVal))
+      .forEach(p=>{
+        const card=document.createElement("div");
+        card.className="card";
+        card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+        if(token){
+          const followBtn=document.createElement("button");
+          followBtn.textContent="Follow"; followBtn.className="followBtn"; followBtn.onclick=()=>followUser(p.owner);
+          card.appendChild(followBtn);
+          if(p.owner===currentUser){
+            const delBtn=document.createElement("button");
+            delBtn.textContent="Delete"; delBtn.className="deleteBtn"; delBtn.onclick=()=>deleteProduct(p._id);
+            card.appendChild(delBtn);
+          }
+        }
+        grid.appendChild(card);
+      });
+  }catch(err){console.log(err);}
 }
 
-// DELETE
-async function deleteProduct(id){
-  await fetch(API_URL+"/products/"+id,{
-    method:"DELETE",
-    headers:{"Authorization":"Bearer "+token}
-  });
-  renderProducts();
-}
-
-// START
-renderProducts();
+/* ADD / DELETE / FOLLOW / PROFILE / FEED / SEARCH SAME AS BEFORE */
+function openAdd(){if(!token)return alert("Login first");document.getElementById("modalBackdrop").style.display="flex";}
+function closeModal(){document.getElementById("modalBackdrop").style.display="none";}
+async function submitProduct(){const name=document.getElementById("modalName").value;const price=document.getElementById("modalPrice").value;if(!name||!price)return alert("Enter both fields");const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});if(res.ok){alert("Product added!");closeModal();renderProducts();}else alert("Error adding product!");}
+async function deleteProduct(id){if(!token)return alert("Login first");await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}});renderProducts();}
+function followUser(user){if(!currentUser)return alert("Login first");if(user===currentUser)return alert("Cannot follow yourself");if(!follows[currentUser])follows[currentUser]=[];if(!follows[currentUser].includes(user))follows[currentUser].push(user);localStorage.setItem("follows",JSON.stringify(follows));alert("Followed "+user);}
+async function openProfile(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const myProducts=products.filter(p=>p.owner===currentUser);const grid=document.getElementById("productGrid");grid.innerHTML="";myProducts.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;grid.appendChild(card);});}
+async function viewFeed(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const grid=document.getElementById("productGrid");grid.innerHTML="";const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));feed.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;grid.appendChild(card);});}
+const searchInput=document.getElementById("search");searchInput.oninput=()=>{renderProducts();};
+document.getElementById("searchClear").onclick=()=>{searchInput.value=""; renderProducts();}
+document.getElementById("loginBtn").onclick=openLogin;
+document.getElementById("addBtn").onclick=openAdd;
+document.getElementById("profileBtn").onclick=openProfile;
+document.getElementById("feedBtn").onclick=viewFeed;
+document.getElementById("themeBtn").onclick=toggleTheme;
+function initWebSocket(){if(ws)ws.close();ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws"); ws.onmessage=e=>renderProducts();}
+renderProducts(); if(token)initWebSocket();
 </script>
-
 </body>
 </html>
