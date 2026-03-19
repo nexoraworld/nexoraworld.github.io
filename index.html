@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA v8.6 STABLE</title>
-
+<title>NEXORA v8.5 Quantum AI Core</title>
 <style>
 :root{
   --dark:#0f0f14;
@@ -12,139 +11,318 @@
   --cyan:#00f2ff;
   --hover:#0ff;
   --card-dark:#111;
+  --card-light:#ddd;
   --text-dark:#fff;
   --text-light:#111;
 }
 body{
   margin:0;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:var(--dark);
   color:var(--text-dark);
+  transition:0.3s;
+  overflow-x:hidden;
 }
 body.light{
   background:var(--light);
   color:var(--text-light);
 }
-.content{padding:30px;}
-.btn{
-  padding:10px 20px;
-  border:none;
-  border-radius:20px;
-  background:#111;
-  color:#fff;
-  margin:10px;
-  cursor:pointer;
-  box-shadow:0 0 10px var(--cyan);
+.content{
+  padding:30px;
+  transition:0.3s;
 }
+.sidebar{
+  position:fixed;
+  left:0; top:0;
+  width:220px; height:100%;
+  background:transparent;
+  padding-top:60px;
+  transition:0.4s;
+  overflow:hidden;
+  z-index:1;
+}
+.sidebar.collapsed{width:70px;}
+.arrow-control{
+  position:fixed;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  z-index:1000;
+}
+.arrow{
+  font-size:22px;
+  transition:0.4s;
+}
+.dots{
+  position:relative;
+  width:10px;
+  height:150px;
+}
+.star{
+  position:absolute;
+  width:3px; height:3px;
+  background:white; border-radius:50%;
+  animation:starAnim linear infinite;
+}
+@keyframes starAnim{
+  0%{top:0; opacity:1;}
+  100%{top:150px; opacity:0;}
+}
+.arrow-line{
+  position:absolute;
+  width:2px; height:50px;
+  background:white;
+  left:50%; transform:translateX(-50%);
+  animation:lineAnim 1s linear infinite;
+}
+@keyframes lineAnim{
+  0%{top:0; opacity:1;}
+  50%{top:50px; opacity:0.5;}
+  100%{top:0; opacity:1;}
+}
+.arrow-control.active .arrow:first-child{transform:translateY(-50px);}
+.arrow-control.active .arrow:last-child{transform:translateY(50px);}
+.content .btn{margin:10px 15px;}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:20px;
+  gap:25px;
 }
 .card{
   background:var(--card-dark);
   padding:15px;
   border-radius:10px;
   border:1px solid var(--cyan);
+  transition:0.3s;
+  position:relative;
+  color:inherit;
 }
+.card:hover{box-shadow:0 0 25px var(--hover);}
 .theme-toggle{
-  position:fixed;
-  bottom:20px;
-  right:20px;
+  position:fixed; bottom:20px; right:20px;
+  width:60px; height:60px; border-radius:50%;
+  font-size:24px; cursor:pointer; box-shadow:0 0 20px var(--cyan);
 }
+.modal-backdrop{
+  display:none;
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.6); z-index:2000;
+  justify-content:center; align-items:center;
+}
+.modal{
+  background:var(--card-dark); padding:20px; border-radius:10px;
+  display:flex; flex-direction:column; gap:10px;
+  width:300px;
+}
+.modal input{padding:8px;}
+.modal button{padding:8px; cursor:pointer; background:var(--cyan); border:none; color:#000; border-radius:5px;}
 </style>
 </head>
-
 <body>
 
-<div class="content">
+<div class="sidebar" id="sidebar"></div>
+<div class="arrow-control" id="arrowControl" onclick="toggleMenu()">
+  <div class="arrow">▲</div>
+  <div class="dots" id="dots"></div>
+  <div class="arrow">▼</div>
+  <div class="arrow-line"></div>
+</div>
+
+<div class="content" id="mainContent">
 <h2>NEXORA Quantum Core</h2>
 
-<button class="btn" onclick="openLogin()">Login</button>
-<button class="btn" onclick="openAdd()">Add Product</button>
+<select id="categoryFilter">
+  <option value="all">All Categories</option>
+  <option value="AI">AI</option>
+  <option value="SciFi">SciFi</option>
+  <option value="Other">Other</option>
+</select>
+<input id="search" placeholder="Search..." style="padding:8px;margin:5px; width:200px;">
+
+<button class="btn" id="loginBtn">Login / Register</button>
+<button class="btn" id="addBtn">Add Product</button>
+<button class="btn" id="profileBtn">Profile</button>
+<button class="btn" id="feedBtn">Follow Feed</button>
 
 <div class="grid" id="productGrid"></div>
 </div>
 
-<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalForm">
+    <h3>Add Product</h3>
+    <input id="modalName" placeholder="Product Name">
+    <input id="modalPrice" placeholder="Price">
+    <button onclick="submitProduct()">Add</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
 
 <script>
-
 const API_URL="https://nexora-backend-j2v3.onrender.com";
-
+let token = localStorage.getItem("token") || null;
 let currentUser = localStorage.getItem("currentUser") || null;
+let follows = JSON.parse(localStorage.getItem("follows")) || {};
+let ws=null; let menuOpen=true;
 
-/* ===== THEME ===== */
 function toggleTheme(){
   document.body.classList.toggle("light");
+  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
+  document.querySelectorAll(".card").forEach(c=>c.style.color="inherit");
 }
 
-/* ===== LOGIN FIX ===== */
-function openLogin(){
-  const username = prompt("Username:");
-  if(!username) return;
-
-  currentUser = username;
-  localStorage.setItem("currentUser", username);
-
-  alert("Login OK ✅");
+const sidebar=document.getElementById("sidebar");
+const arrowControl=document.getElementById("arrowControl");
+const mainContent=document.getElementById("mainContent");
+function toggleMenu(){
+  menuOpen=!menuOpen;
+  sidebar.classList.toggle("collapsed");
+  arrowControl.classList.toggle("active");
+  const buttons=mainContent.querySelectorAll(".btn, select, #search");
+  const cards=mainContent.querySelectorAll(".card");
+  buttons.forEach(b=>b.style.display=menuOpen?"inline-block":"none");
+  cards.forEach(c=>c.style.display=menuOpen?"grid-item":"none");
 }
 
-/* ===== PRODUCTS ===== */
+async function openLogin(){
+  const username=prompt("Username:");
+  const password=prompt("Password:");
+  if(!username||!password) return alert("Enter both");
+  try{
+    const res=await fetch(API_URL+"/auth/login",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username,password})});
+    const data=await res.json();
+    if(data.token){
+      token=data.token; currentUser=username;
+      localStorage.setItem("token",token);
+      localStorage.setItem("currentUser",currentUser);
+      alert("Logged in!");
+      renderProducts(); initWebSocket();
+    } else alert(data.message||"Login failed");
+  }catch(err){console.log(err);}
+}
+
 async function renderProducts(){
-  const res = await fetch(API_URL+"/products");
-  const products = await res.json();
+  try{
+    const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}} );
+    const products=await res.json();
+    const grid=document.getElementById("productGrid");
+    grid.innerHTML="";
+    const searchVal=document.getElementById("search").value.toLowerCase();
+    const catVal=document.getElementById("categoryFilter").value;
+    products.filter(p=> (catVal==="all"||p.cat===catVal) && (p.name.toLowerCase().includes(searchVal)))
+    .forEach(p=>{
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+      if(token){
+        const followBtn=document.createElement("button");
+        followBtn.textContent="Follow";
+        followBtn.onclick=()=>followUser(p.owner);
+        card.appendChild(followBtn);
+        if(p.owner===currentUser){
+          const delBtn=document.createElement("button");
+          delBtn.textContent="Delete";
+          delBtn.onclick=()=>deleteProduct(p._id);
+          card.appendChild(delBtn);
+        }
+      }
+      grid.appendChild(card);
+    });
+  }catch(err){console.log(err);}
+}
 
-  productGrid.innerHTML="";
+function openAdd(){if(!token)return alert("Login first");document.getElementById("modalBackdrop").style.display="flex";}
+function closeModal(){document.getElementById("modalBackdrop").style.display="none";}
 
-  products.forEach(p=>{
-    productGrid.innerHTML += `
-      <div class="card">
-        <h3>${p.name}</h3>
-        <p>Price: ${p.price}</p>
-        <p>By: ${p.owner || "unknown"}</p>
-      </div>
-    `;
+async function submitProduct(){
+  const name=document.getElementById("modalName").value;
+  const price=document.getElementById("modalPrice").value;
+  if(!name||!price) return alert("Enter both fields");
+  const res=await fetch(API_URL+"/products",{method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify({name,price,owner:currentUser})});
+  if(res.ok){ alert("Product added!"); closeModal(); renderProducts(); }
+  else alert("Error adding product!");
+}
+
+async function deleteProduct(id){
+  if(!token) return alert("Login first");
+  await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}});
+  renderProducts();
+}
+
+function followUser(user){
+  if(!currentUser) return alert("Login first");
+  if(user===currentUser) return alert("Cannot follow yourself");
+  if(!follows[currentUser]) follows[currentUser]=[];
+  if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
+  localStorage.setItem("follows",JSON.stringify(follows));
+  alert("Followed "+user);
+}
+
+async function openProfile(){
+  if(!token) return alert("Login first");
+  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products=await res.json();
+  const myProducts=products.filter(p=>p.owner===currentUser);
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  myProducts.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;
+    grid.appendChild(card);
   });
 }
 
-/* ===== ADD PRODUCT FIX ===== */
-async function openAdd(){
-
-  if(!currentUser){
-    alert("Önce login ol");
-    return;
-  }
-
-  const name = prompt("Product name");
-  const price = prompt("Price");
-
-  if(!name || !price) return;
-
-  const res = await fetch(API_URL+"/products",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      name:name,
-      price:price,
-      owner:currentUser
-    })
+async function viewFeed(){
+  if(!token) return alert("Login first");
+  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products=await res.json();
+  const grid=document.getElementById("productGrid");
+  grid.innerHTML="";
+  const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));
+  feed.forEach(p=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+    grid.appendChild(card);
   });
-
-  if(res.ok){
-    alert("Ürün eklendi ✅");
-    renderProducts();
-  }else{
-    alert("Hata var ❌");
-  }
 }
 
-/* ===== START ===== */
+document.getElementById("search").onkeyup=renderProducts;
+document.getElementById("categoryFilter").onchange=renderProducts;
+
+function initWebSocket(){
+  if(ws) ws.close();
+  ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");
+  ws.onmessage=e=>renderProducts();
+}
+
+document.getElementById("loginBtn").onclick=openLogin;
+document.getElementById("addBtn").onclick=openAdd;
+document.getElementById("profileBtn").onclick=openProfile;
+document.getElementById("feedBtn").onclick=viewFeed;
+
+const dotsContainer=document.getElementById("dots");
+for(let i=0;i<20;i++){
+  const star=document.createElement("div");
+  star.className="star";
+  star.style.left=Math.random()*10+"px";
+  star.style.animationDuration=(Math.random()*2+1)+"s";
+  dotsContainer.appendChild(star);
+}
+
 renderProducts();
-
+if(token) initWebSocket();
 </script>
-
 </body>
 </html>
