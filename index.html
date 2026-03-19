@@ -9,27 +9,51 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#0f0f14;color:#fff;}
-body.light{background:#f5f5f5;color:#111;}
-
-.content{padding:20px;}
-.btn{margin:5px;padding:8px;border:none;border-radius:6px;background:#ff9900;}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;}
-
-.card{background:#1a1a1f;padding:12px;border-radius:10px;}
-body.light .card{background:#eee;}
-
-.theme-toggle{
-position:fixed;bottom:15px;right:15px;
-width:50px;height:50px;border-radius:50%;
-background:#ff9900;
+:root{
+--dark:#0f0f14;
+--light:#f5f1e6;
+--cyan:#00f2ff;
+--card:#1a1a1f;
+--cardLight:#eaeaea;
 }
 
+body{margin:0;font-family:Arial;background:var(--dark);color:#fff;overflow-x:hidden;}
+body.light{background:var(--light);color:#111;}
+
+.content{padding:30px;}
+.btn{margin:10px;padding:8px 12px;border:none;border-radius:6px;background:var(--cyan);cursor:pointer;}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+gap:20px;
+}
+
+.card{
+background:var(--card);
+padding:15px;
+border-radius:10px;
+}
+body.light .card{background:var(--cardLight);}
+
+/* SEARCH */
+.searchBox{position:relative;display:inline-block;}
+.searchBox input{padding:8px;width:200px;}
+.searchBox span{
+position:absolute;right:8px;top:6px;cursor:pointer;font-size:18px;
+}
+
+/* THEME */
+.theme-toggle{
+position:fixed;bottom:20px;right:20px;
+width:60px;height:60px;border-radius:50%;
+background:var(--cyan);font-size:22px;
+}
+
+/* MODAL */
 .modal-backdrop{
-display:none;position:fixed;
-top:0;left:0;width:100%;height:100%;
-background:rgba(0,0,0,0.5);
+display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.6);
 justify-content:center;align-items:center;
 }
 .modal{
@@ -37,34 +61,52 @@ background:#222;padding:20px;border-radius:10px;width:300px;position:relative;
 }
 body.light .modal{background:#fff;color:#000;}
 .close{position:absolute;right:10px;top:10px;cursor:pointer;}
+
+/* INPUT EFFECT */
+.input-wrap{position:relative;}
+.input-wrap input{width:100%;padding:8px;}
+.fake{
+position:absolute;right:5px;top:5px;font-size:12px;opacity:0.6;
+}
 </style>
 </head>
 
 <body>
 
 <div class="content">
+
 <h2>NEXORA</h2>
 
-<button id="loginBtn" class="btn">Login</button>
-<button id="addBtn" class="btn">Add Product</button>
+<button class="btn" onclick="openLogin()">Login</button>
+<button class="btn" onclick="openAdd()">Add Product</button>
 
+<div class="searchBox">
 <input id="search" placeholder="Search...">
-<button onclick="clearSearch()">×</button>
+<span onclick="clearSearch()">×</span>
+</div>
 
 <div class="grid" id="productGrid"></div>
+
 </div>
 
 <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-<!-- LOGIN MODAL -->
+<!-- LOGIN -->
 <div class="modal-backdrop" id="loginModal">
 <div class="modal">
 <div class="close" onclick="closeLogin()">✖</div>
 
 <h3>Login</h3>
 
-<input id="loginUser" placeholder="Gmail veya Telefon">
-<input id="loginPass" type="password" maxlength="9" placeholder="Şifre">
+<div class="input-wrap">
+<input id="loginUser" oninput="fakeUser(this)">
+<div class="fake" id="fakeUser"></div>
+</div>
+
+<div class="input-wrap">
+<input type="password" id="loginPass" maxlength="9" oninput="fakePass(this)">
+<div class="fake" id="fakePass"></div>
+</div>
 
 <button onclick="doLogin()">Giriş</button>
 <button onclick="doRegister()">Kayıt Ol</button>
@@ -72,7 +114,7 @@ body.light .modal{background:#fff;color:#000;}
 </div>
 </div>
 
-<!-- ADD PRODUCT -->
+<!-- ADD -->
 <div class="modal-backdrop" id="addModal">
 <div class="modal">
 <div class="close" onclick="closeAdd()">✖</div>
@@ -86,155 +128,146 @@ body.light .modal{background:#fff;color:#000;}
 </div>
 
 <script>
-// 🔥 FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
-  authDomain: "nexora-8af81.firebaseapp.com",
-  projectId: "nexora-8af81",
-  storageBucket: "nexora-8af81.firebasestorage.app",
-  messagingSenderId: "215728074189",
-  appId: "1:215728074189:web:4c18a6687d5d01d3dbe884",
-  measurementId: "G-QM132D68K0"
-};
+// FIREBASE
+firebase.initializeApp({
+apiKey:"AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
+authDomain:"nexora-8af81.firebaseapp.com",
+projectId:"nexora-8af81"
+});
+const auth=firebase.auth();
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-// ===== API =====
+// API
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 
 let token=null;
 let currentUser=null;
 
-// ===== THEME =====
+// THEME
 function toggleTheme(){
-  document.body.classList.toggle("light");
+document.body.classList.toggle("light");
 }
 
-// ===== LOGIN =====
-loginBtn.onclick=()=>loginModal.style.display="flex";
+// SEARCH
+function clearSearch(){
+search.value="";
+renderProducts();
+}
+search.oninput=renderProducts;
+
+// LOGIN UI
+function openLogin(){loginModal.style.display="flex";}
 function closeLogin(){loginModal.style.display="none";}
 
-// 🔥 REGISTER (MAIL DOĞRULAMALI)
+// INPUT EFFECT
+function fakeUser(el){
+fakeUser.innerText=el.value.split("").map(c=>c.toLowerCase()).join("");
+}
+function fakePass(el){
+fakePass.innerText=el.value.split("").map(()=>"*").join("");
+}
+
+// REGISTER (MAIL DOĞRULAMA)
 function doRegister(){
-  const user=loginUser.value;
-  const pass=loginPass.value;
+const user=loginUser.value;
+const pass=loginPass.value;
 
-  if(pass.length>9)return alert("Max 9 karakter");
-
-  auth.createUserWithEmailAndPassword(user,pass)
-  .then((cred)=>{
-    cred.user.sendEmailVerification();
-    alert("📩 Doğrulama maili gönderildi! Gmailini kontrol et.");
-  })
-  .catch(e=>alert(e.message));
+auth.createUserWithEmailAndPassword(user,pass)
+.then(c=>{
+c.user.sendEmailVerification();
+alert("Mail gönderildi!");
+})
+.catch(e=>alert(e.message));
 }
 
 // LOGIN
 async function doLogin(){
-  const user=loginUser.value;
-  const pass=loginPass.value;
+const user=loginUser.value;
+const pass=loginPass.value;
 
-  try{
-    const cred = await auth.signInWithEmailAndPassword(user,pass);
+const cred=await auth.signInWithEmailAndPassword(user,pass);
 
-    if(!cred.user.emailVerified){
-      alert("❗ Önce mailini doğrula!");
-      return;
-    }
-
-    const res=await fetch(API_URL+"/auth/login",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({username:user,password:pass})
-    });
-
-    const data=await res.json();
-
-    if(data.token){
-      token=data.token;
-      currentUser=user;
-      localStorage.setItem("token",token);
-      alert("Giriş başarılı");
-      closeLogin();
-      renderProducts();
-    }
-
-  }catch(e){alert(e.message);}
+if(!cred.user.emailVerified){
+alert("Mail doğrula!");
+return;
 }
 
-// ===== ADD =====
-addBtn.onclick=()=>{
-  if(!token)return loginModal.style.display="flex";
-  addModal.style.display="flex";
-};
+const res=await fetch(API_URL+"/auth/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({username:user,password:pass})
+});
+
+const data=await res.json();
+
+if(data.token){
+token=data.token;
+currentUser=user;
+renderProducts();
+closeLogin();
+}
+}
+
+// ADD
+function openAdd(){
+if(!token)return openLogin();
+addModal.style.display="flex";
+}
 function closeAdd(){addModal.style.display="none";}
 
 async function submitProduct(){
-  const name=modalName.value;
-  const price=modalPrice.value;
-
-  await fetch(API_URL+"/products",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "Authorization":"Bearer "+token
-    },
-    body:JSON.stringify({name,price,owner:currentUser})
-  });
-
-  closeAdd();
-  renderProducts();
+await fetch(API_URL+"/products",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+token
+},
+body:JSON.stringify({
+name:modalName.value,
+price:modalPrice.value,
+owner:currentUser
+})
+});
+closeAdd();
+renderProducts();
 }
 
-// ===== PRODUCTS =====
+// PRODUCTS
 async function renderProducts(){
-  const res=await fetch(API_URL+"/products");
-  const products=await res.json();
+const res=await fetch(API_URL+"/products");
+const products=await res.json();
 
-  productGrid.innerHTML="";
+productGrid.innerHTML="";
 
-  products.forEach(p=>{
-    const div=document.createElement("div");
-    div.className="card";
+products.forEach(p=>{
+const c=document.createElement("div");
+c.className="card";
 
-    div.innerHTML=`
-    <h3>${p.name}</h3>
-    <p>${p.price}</p>
-    <p>${p.owner}</p>
-    `;
+c.innerHTML=`<h3>${p.name}</h3><p>${p.price}</p><p>${p.owner}</p>`;
 
-    const del=document.createElement("button");
-    del.innerText="Delete";
-    del.onclick=()=>deleteProduct(p._id);
+const d=document.createElement("button");
+d.innerText="Delete";
+d.onclick=()=>deleteProduct(p._id);
 
-    const fol=document.createElement("button");
-    fol.innerText="Follow";
+const f=document.createElement("button");
+f.innerText="Follow";
 
-    div.appendChild(del);
-    div.appendChild(fol);
+c.appendChild(d);
+c.appendChild(f);
 
-    productGrid.appendChild(div);
-  });
+productGrid.appendChild(c);
+});
 }
 
-// ===== DELETE =====
+// DELETE
 async function deleteProduct(id){
-  await fetch(API_URL+"/products/"+id,{
-    method:"DELETE",
-    headers:{"Authorization":"Bearer "+token}
-  });
-  renderProducts();
+await fetch(API_URL+"/products/"+id,{
+method:"DELETE",
+headers:{"Authorization":"Bearer "+token}
+});
+renderProducts();
 }
 
-// ===== SEARCH =====
-search.oninput=renderProducts;
-function clearSearch(){
-  search.value="";
-  renderProducts();
-}
-
-// ===== START =====
+// START
 renderProducts();
 </script>
 
