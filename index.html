@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXORA</title>
 
-<!-- FIREBASE CDN -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
@@ -27,7 +26,6 @@ width:50px;height:50px;border-radius:50%;
 background:#ff9900;
 }
 
-/* MODAL */
 .modal-backdrop{
 display:none;position:fixed;
 top:0;left:0;width:100%;height:100%;
@@ -88,7 +86,7 @@ body.light .modal{background:#fff;color:#000;}
 </div>
 
 <script>
-// 🔥 FIREBASE CONFIG (SENİN)
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
   authDomain: "nexora-8af81.firebaseapp.com",
@@ -117,6 +115,7 @@ function toggleTheme(){
 loginBtn.onclick=()=>loginModal.style.display="flex";
 function closeLogin(){loginModal.style.display="none";}
 
+// 🔥 REGISTER (MAIL DOĞRULAMALI)
 function doRegister(){
   const user=loginUser.value;
   const pass=loginPass.value;
@@ -124,16 +123,25 @@ function doRegister(){
   if(pass.length>9)return alert("Max 9 karakter");
 
   auth.createUserWithEmailAndPassword(user,pass)
-  .then(()=>alert("Kayıt başarılı"))
+  .then((cred)=>{
+    cred.user.sendEmailVerification();
+    alert("📩 Doğrulama maili gönderildi! Gmailini kontrol et.");
+  })
   .catch(e=>alert(e.message));
 }
 
+// LOGIN
 async function doLogin(){
   const user=loginUser.value;
   const pass=loginPass.value;
 
   try{
-    await auth.signInWithEmailAndPassword(user,pass);
+    const cred = await auth.signInWithEmailAndPassword(user,pass);
+
+    if(!cred.user.emailVerified){
+      alert("❗ Önce mailini doğrula!");
+      return;
+    }
 
     const res=await fetch(API_URL+"/auth/login",{
       method:"POST",
@@ -151,6 +159,7 @@ async function doLogin(){
       closeLogin();
       renderProducts();
     }
+
   }catch(e){alert(e.message);}
 }
 
