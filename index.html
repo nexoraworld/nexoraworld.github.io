@@ -21,16 +21,9 @@ body{
   transition:0.3s; overflow-x:hidden;
 }
 body.light{ background:var(--light); color:var(--text-light);}
-.content{
-  padding:20px 30px;
-}
-.header{
-  display:flex; flex-direction:column; align-items:flex-start;
-  gap:10px;
-}
-.header-buttons{
-  display:flex; flex-wrap:wrap; gap:10px;
-}
+.content{ padding:20px 30px; }
+.header{ display:flex; flex-direction:column; align-items:flex-start; gap:10px;}
+.header-buttons{ display:flex; flex-wrap:wrap; gap:10px;}
 .header-buttons button{
   padding:8px 12px; border:none; border-radius:5px;
   background:var(--cyan); color:#000; cursor:pointer;
@@ -56,7 +49,6 @@ select, input{
   width:60px; height:60px; border-radius:50%; font-size:24px;
   cursor:pointer; box-shadow:0 0 20px var(--cyan);
 }
-/* MODAL */
 .modal-backdrop{
   display:none; position:fixed; top:0; left:0; width:100%; height:100%;
   background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;
@@ -70,13 +62,8 @@ select, input{
   padding:8px; cursor:pointer; background:var(--cyan); border:none;
   color:#000; border-radius:5px;
 }
-/* RESPONSIVE */
-@media screen and (max-width:768px){
-  .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:15px;}
-}
-@media screen and (max-width:480px){
-  .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
-}
+@media screen and (max-width:768px){ .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:15px;} }
+@media screen and (max-width:480px){ .grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;} }
 </style>
 </head>
 <body>
@@ -104,7 +91,7 @@ select, input{
   <div class="grid" id="productGrid"></div>
 </div>
 
-<button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+<button class="theme-toggle" id="themeBtn">🌙</button>
 
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" id="modalForm">
@@ -128,7 +115,7 @@ let ws=null;
 // THEME
 function toggleTheme(){
   document.body.classList.toggle("light");
-  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
+  document.getElementById("themeBtn").textContent=document.body.classList.contains("light")?"☀":"🌙";
   document.querySelectorAll(".card").forEach(c=>c.style.color="inherit");
 }
 
@@ -163,12 +150,14 @@ async function renderProducts(){
       const card=document.createElement("div");
       card.className="card";
       card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+      // Button logic
       if(token){
-        const followBtn=document.createElement("button");
-        followBtn.textContent="Follow";
-        followBtn.onclick=()=>followUser(p.owner);
-        card.appendChild(followBtn);
-        if(p.owner===currentUser){
+        if(p.owner !== currentUser){
+          const followBtn=document.createElement("button");
+          followBtn.textContent="Follow";
+          followBtn.onclick=()=>followUser(p.owner);
+          card.appendChild(followBtn);
+        } else {
           const delBtn=document.createElement("button");
           delBtn.textContent="Delete";
           delBtn.onclick=()=>deleteProduct(p._id);
@@ -201,10 +190,10 @@ async function deleteProduct(id){if(!token)return alert("Login first");await fet
 function followUser(user){if(!currentUser)return alert("Login first");if(user===currentUser)return alert("Cannot follow yourself");if(!follows[currentUser])follows[currentUser]=[];if(!follows[currentUser].includes(user))follows[currentUser].push(user);localStorage.setItem("follows",JSON.stringify(follows));alert("Followed "+user);}
 
 // PROFILE
-async function openProfile(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const myProducts=products.filter(p=>p.owner===currentUser);const grid=document.getElementById("productGrid");grid.innerHTML="";myProducts.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;grid.appendChild(card);});}
+async function openProfile(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const myProducts=products.filter(p=>p.owner===currentUser);const grid=document.getElementById("productGrid");grid.innerHTML="";myProducts.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;const delBtn=document.createElement("button");delBtn.textContent="Delete";delBtn.onclick=()=>deleteProduct(p._id);card.appendChild(delBtn);grid.appendChild(card);});}
 
 // FEED
-async function viewFeed(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const grid=document.getElementById("productGrid");grid.innerHTML="";const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));feed.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;grid.appendChild(card);});}
+async function viewFeed(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const grid=document.getElementById("productGrid");grid.innerHTML="";const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));feed.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;const followBtn=document.createElement("button");followBtn.textContent="Follow";followBtn.onclick=()=>followUser(p.owner);card.appendChild(followBtn);grid.appendChild(card);});}
 
 // SEARCH & FILTER
 document.getElementById("search").onkeyup=renderProducts;
@@ -218,6 +207,7 @@ document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
+document.getElementById("themeBtn").onclick=toggleTheme;
 document.getElementById("modalAddBtn").onclick=submitProduct;
 document.getElementById("modalCancelBtn").onclick=closeModal;
 
