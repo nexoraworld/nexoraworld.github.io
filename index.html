@@ -5,49 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXORA</title>
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
 :root{
---dark:#0f0f14;
---light:#f5f1e6;
---cyan:#00f2ff;
---card:#1a1a1f;
---cardLight:#eaeaea;
+  --dark:#0f0f14;
+  --light:#f5f1e6;
+  --cyan:#ffffff;
+  --card:#1a1a1f;
+  --cardLight:#eaeaea;
 }
-
-body{margin:0;font-family:Arial;background:var(--dark);color:#fff;overflow-x:hidden;}
+body{margin:0;font-family:Arial;background:var(--dark);color:#fff;}
 body.light{background:var(--light);color:#111;}
 
-.content{padding:30px;}
-.btn{margin:10px;padding:8px 12px;border:none;border-radius:6px;background:var(--cyan);cursor:pointer;}
+.content{padding:25px;}
+.btn{margin:10px;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
 
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-gap:20px;
-}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;}
 
-.card{
-background:var(--card);
-padding:15px;
-border-radius:10px;
-}
+.card{background:var(--card);padding:15px;border-radius:10px;}
 body.light .card{background:var(--cardLight);}
 
 /* SEARCH */
 .searchBox{position:relative;display:inline-block;}
 .searchBox input{padding:8px;width:200px;}
-.searchBox span{
-position:absolute;right:8px;top:6px;cursor:pointer;font-size:18px;
-}
+.searchBox span{position:absolute;right:8px;top:6px;cursor:pointer;}
 
 /* THEME */
 .theme-toggle{
 position:fixed;bottom:20px;right:20px;
 width:60px;height:60px;border-radius:50%;
-background:var(--cyan);font-size:22px;
+background:#fff;color:#000;font-size:22px;
 }
 
 /* MODAL */
@@ -128,15 +118,14 @@ position:absolute;right:5px;top:5px;font-size:12px;opacity:0.6;
 </div>
 
 <script>
-// FIREBASE
+// FIREBASE CONFIG
 firebase.initializeApp({
-apiKey:"AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
-authDomain:"nexora-8af81.firebaseapp.com",
-projectId:"nexora-8af81"
+  apiKey: "AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
+  authDomain: "nexora-8af81.firebaseapp.com",
+  projectId: "nexora-8af81"
 });
-const auth=firebase.auth();
+const auth = firebase.auth();
 
-// API
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 
 let token=null;
@@ -144,127 +133,143 @@ let currentUser=null;
 
 // THEME
 function toggleTheme(){
-document.body.classList.toggle("light");
+  document.body.classList.toggle("light");
 }
 
 // SEARCH
 function clearSearch(){
-search.value="";
-renderProducts();
+  search.value="";
+  renderProducts();
 }
 search.oninput=renderProducts;
+
+// INPUT EFFECT
+function fakeUser(el){
+  document.getElementById("fakeUser").innerText =
+    el.value.split("").map(c=>c.toLowerCase()).join("");
+}
+function fakePass(el){
+  document.getElementById("fakePass").innerText =
+    el.value.split("").map(()=>"*").join("");
+}
 
 // LOGIN UI
 function openLogin(){loginModal.style.display="flex";}
 function closeLogin(){loginModal.style.display="none";}
 
-// INPUT EFFECT
-function fakeUser(el){
-fakeUser.innerText=el.value.split("").map(c=>c.toLowerCase()).join("");
-}
-function fakePass(el){
-fakePass.innerText=el.value.split("").map(()=>"*").join("");
-}
-
-// REGISTER (MAIL DOĞRULAMA)
+// REGISTER (FIXED)
 function doRegister(){
-const user=loginUser.value;
-const pass=loginPass.value;
+  const user=loginUser.value.trim();
+  const pass=loginPass.value.trim();
 
-auth.createUserWithEmailAndPassword(user,pass)
-.then(c=>{
-c.user.sendEmailVerification();
-alert("Mail gönderildi!");
-})
-.catch(e=>alert(e.message));
+  if(!user.includes("@")){
+    alert("Geçerli Gmail gir!");
+    return;
+  }
+
+  if(pass.length>9){
+    alert("Şifre max 9 karakter!");
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(user,pass)
+  .then((cred)=>{
+    cred.user.sendEmailVerification();
+    alert("📩 Mail gönderildi!");
+  })
+  .catch(e=>alert(e.message));
 }
 
 // LOGIN
 async function doLogin(){
-const user=loginUser.value;
-const pass=loginPass.value;
+  const user=loginUser.value.trim();
+  const pass=loginPass.value.trim();
 
-const cred=await auth.signInWithEmailAndPassword(user,pass);
+  try{
+    const cred=await auth.signInWithEmailAndPassword(user,pass);
 
-if(!cred.user.emailVerified){
-alert("Mail doğrula!");
-return;
-}
+    if(!cred.user.emailVerified){
+      alert("Mail doğrula!");
+      return;
+    }
 
-const res=await fetch(API_URL+"/auth/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({username:user,password:pass})
-});
+    const res=await fetch(API_URL+"/auth/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username:user,password:pass})
+    });
 
-const data=await res.json();
+    const data=await res.json();
 
-if(data.token){
-token=data.token;
-currentUser=user;
-renderProducts();
-closeLogin();
-}
+    if(data.token){
+      token=data.token;
+      currentUser=user;
+      renderProducts();
+      closeLogin();
+      alert("Giriş başarılı");
+    }
+
+  }catch(e){alert(e.message);}
 }
 
 // ADD
 function openAdd(){
-if(!token)return openLogin();
-addModal.style.display="flex";
+  if(!token)return openLogin();
+  addModal.style.display="flex";
 }
 function closeAdd(){addModal.style.display="none";}
 
 async function submitProduct(){
-await fetch(API_URL+"/products",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+token
-},
-body:JSON.stringify({
-name:modalName.value,
-price:modalPrice.value,
-owner:currentUser
-})
-});
-closeAdd();
-renderProducts();
+  await fetch(API_URL+"/products",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
+    },
+    body:JSON.stringify({
+      name:modalName.value,
+      price:modalPrice.value,
+      owner:currentUser
+    })
+  });
+  closeAdd();
+  renderProducts();
 }
 
 // PRODUCTS
 async function renderProducts(){
-const res=await fetch(API_URL+"/products");
-const products=await res.json();
+  const res=await fetch(API_URL+"/products");
+  const products=await res.json();
 
-productGrid.innerHTML="";
+  productGrid.innerHTML="";
 
-products.forEach(p=>{
-const c=document.createElement("div");
-c.className="card";
+  products.forEach(p=>{
+    const c=document.createElement("div");
+    c.className="card";
 
-c.innerHTML=`<h3>${p.name}</h3><p>${p.price}</p><p>${p.owner}</p>`;
+    c.innerHTML=`<h3>${p.name}</h3><p>${p.price}</p><p>${p.owner}</p>`;
 
-const d=document.createElement("button");
-d.innerText="Delete";
-d.onclick=()=>deleteProduct(p._id);
+    const d=document.createElement("button");
+    d.innerText="Delete";
+    d.onclick=()=>deleteProduct(p._id);
 
-const f=document.createElement("button");
-f.innerText="Follow";
+    const f=document.createElement("button");
+    f.innerText="Follow";
 
-c.appendChild(d);
-c.appendChild(f);
+    c.appendChild(d);
+    c.appendChild(f);
 
-productGrid.appendChild(c);
-});
+    productGrid.appendChild(c);
+  });
 }
 
 // DELETE
 async function deleteProduct(id){
-await fetch(API_URL+"/products/"+id,{
-method:"DELETE",
-headers:{"Authorization":"Bearer "+token}
-});
-renderProducts();
+  await fetch(API_URL+"/products/"+id,{
+    method:"DELETE",
+    headers:{"Authorization":"Bearer "+token}
+  });
+  renderProducts();
 }
 
 // START
