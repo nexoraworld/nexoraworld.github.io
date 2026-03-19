@@ -138,25 +138,25 @@ body.light{
 </div>
 
 <script>
-// ========== API & STATE ==========
+// ===== API & STATE =====
 const API_URL="https://nexora-backend-j2v3.onrender.com";
 let token=localStorage.getItem("token")||null;
 let currentUser=localStorage.getItem("currentUser")||null;
 let follows=JSON.parse(localStorage.getItem("follows"))||{};
 let ws=null;
 
-// THEME
+// ===== THEME =====
 function toggleTheme(){
   document.body.classList.toggle("light");
   document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
   document.querySelectorAll(".card").forEach(c=>c.style.color="inherit");
 }
 
-// LOGIN
+// ===== LOGIN =====
 async function openLogin(){
   const username=prompt("Username:");
   const password=prompt("Password:");
-  if(!username||!password)return alert("Enter both");
+  if(!username||!password) return alert("Enter both");
   try{
     const res=await fetch(API_URL+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
     const data=await res.json();
@@ -167,10 +167,10 @@ async function openLogin(){
       alert("Logged in!");
       renderProducts(); initWebSocket();
     } else alert(data.message||"Login failed");
-  }catch(err){console.log(err);}
+  } catch(err){console.log(err);}
 }
 
-// PRODUCTS
+// ===== PRODUCTS =====
 async function renderProducts(){
   try{
     const res=await fetch(API_URL+"/products",{headers: token?{"Authorization":"Bearer "+token}:{}} );
@@ -198,53 +198,92 @@ async function renderProducts(){
         }
         grid.appendChild(card);
       });
-  }catch(err){console.log(err);}
+  } catch(err){console.log(err);}
 }
 
-// ADD PRODUCT MODAL
-function openAdd(){if(!token)return alert("Login first");document.getElementById("modalBackdrop").style.display="flex";}
+// ===== ADD PRODUCT MODAL =====
+function openAdd(){if(!token) return alert("Login first"); document.getElementById("modalBackdrop").style.display="flex";}
 function closeModal(){document.getElementById("modalBackdrop").style.display="none";}
 async function submitProduct(){
   const name=document.getElementById("modalName").value;
   const price=document.getElementById("modalPrice").value;
-  if(!name||!price)return alert("Enter both fields");
+  if(!name||!price) return alert("Enter both fields");
   const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});
   if(res.ok){alert("Product added!");closeModal();renderProducts();}
   else alert("Error adding product!");
 }
 
-// DELETE
-async function deleteProduct(id){if(!token)return alert("Login first");await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}});renderProducts();}
+// ===== DELETE =====
+async function deleteProduct(id){if(!token) return alert("Login first"); await fetch(API_URL+"/products/"+id,{method:"DELETE",headers:{"Authorization":"Bearer "+token}}); renderProducts();}
 
-// FOLLOW
-function followUser(user){if(!currentUser)return alert("Login first");if(user===currentUser)return alert("Cannot follow yourself");if(!follows[currentUser])follows[currentUser]=[];if(!follows[currentUser].includes(user))follows[currentUser].push(user);localStorage.setItem("follows",JSON.stringify(follows));alert("Followed "+user);}
+// ===== FOLLOW =====
+function followUser(user){
+  if(!currentUser) return alert("Login first");
+  if(user===currentUser) return alert("Cannot follow yourself");
+  if(!follows[currentUser]) follows[currentUser]=[];
+  if(!follows[currentUser].includes(user)) follows[currentUser].push(user);
+  localStorage.setItem("follows",JSON.stringify(follows));
+  alert("Followed "+user);
+}
 
-// PROFILE
-async function openProfile(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const myProducts=products.filter(p=>p.owner===currentUser);const grid=document.getElementById("productGrid");grid.innerHTML="";myProducts.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;grid.appendChild(card);});}
+// ===== PROFILE =====
+async function openProfile(){
+  if(!token) return alert("Login first");
+  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products=await res.json();
+  const myProducts=products.filter(p=>p.owner===currentUser);
+  const grid=document.getElementById("productGrid"); grid.innerHTML="";
+  myProducts.forEach(p=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`; grid.appendChild(card);
+  });
+}
 
-// FEED
-async function viewFeed(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const grid=document.getElementById("productGrid");grid.innerHTML="";const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));feed.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;grid.appendChild(card);});}
+// ===== FEED =====
+async function viewFeed(){
+  if(!token) return alert("Login first");
+  const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});
+  const products=await res.json();
+  const grid=document.getElementById("productGrid"); grid.innerHTML="";
+  const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));
+  feed.forEach(p=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+    grid.appendChild(card);
+  });
+}
 
-// SEARCH & FILTER
+// ===== SEARCH & FILTER =====
 document.getElementById("search").onkeyup=renderProducts;
 document.getElementById("categoryFilter").onchange=renderProducts;
 
-// WEBSOCKET
-function initWebSocket(){if(ws)ws.close();ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");ws.onmessage=e=>renderProducts();}
+// ===== WEBSOCKET =====
+function initWebSocket(){if(ws) ws.close(); ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws"); ws.onmessage=e=>renderProducts();}
 
-// EVENTS
+// ===== EVENTS =====
 document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
 
-// SIDEBAR STARS
+// ===== SIDEBAR STARS =====
 const dotsContainer=document.getElementById("sidebar");
-for(let i=0;i<20;i++){const star=document.createElement("div");star.className="star";star.style.left=Math.random()*200+"px";star.style.top=Math.random()*600+"px";star.style.width="3px";star.style.height="3px";star.style.background="white";star.style.borderRadius="50%";star.style.position="absolute";star.style.animationDuration=(Math.random()*2+1)+"s";dotsContainer.appendChild(star);}
+for(let i=0;i<20;i++){
+  const star=document.createElement("div");
+  star.className="star";
+  star.style.left=Math.random()*200+"px";
+  star.style.top=Math.random()*600+"px";
+  star.style.width="3px"; star.style.height="3px";
+  star.style.background="white";
+  star.style.borderRadius="50%";
+  star.style.position="absolute";
+  star.style.animationDuration=(Math.random()*2+1)+"s";
+  dotsContainer.appendChild(star);
+}
 
-// START
+// ===== START =====
 renderProducts();
-if(token)initWebSocket();
+if(token) initWebSocket();
 </script>
 </body>
 </html>
