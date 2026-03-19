@@ -3,112 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA Quantum Core</title>
+<title>NEXORA</title>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<!-- FIREBASE CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <style>
-:root{
-  --dark:#0f0f14;
-  --light:#f5f1e6;
-  --card:#1a1a1f;
-  --accent:#ff9900;
-  --text:#ffffff;
-}
-
-body{
-  margin:0;
-  font-family:Arial;
-  background:var(--dark);
-  color:var(--text);
-}
-
-body.light{
-  background:#f5f5f5;
-  color:#111;
-}
+body{margin:0;font-family:Arial;background:#0f0f14;color:#fff;}
+body.light{background:#f5f5f5;color:#111;}
 
 .content{padding:20px;}
+.btn{margin:5px;padding:8px;border:none;border-radius:6px;background:#ff9900;}
 
-.btn{
-  margin:5px;
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  background:var(--accent);
-  cursor:pointer;
-}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;}
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:15px;
-}
-
-.card{
-  background:var(--card);
-  padding:12px;
-  border-radius:10px;
-}
-
-body.light .card{
-  background:#eee;
-}
+.card{background:#1a1a1f;padding:12px;border-radius:10px;}
+body.light .card{background:#eee;}
 
 .theme-toggle{
-  position:fixed;
-  bottom:15px;
-  right:15px;
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:var(--accent);
+position:fixed;bottom:15px;right:15px;
+width:50px;height:50px;border-radius:50%;
+background:#ff9900;
 }
 
 /* MODAL */
 .modal-backdrop{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.4);
-  justify-content:center;
-  align-items:center;
+display:none;position:fixed;
+top:0;left:0;width:100%;height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;align-items:center;
 }
-
 .modal{
-  background:#222;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-  position:relative;
+background:#222;padding:20px;border-radius:10px;width:300px;position:relative;
 }
-
-body.light .modal{
-  background:#fff;
-  color:#000;
-}
-
-.close{
-  position:absolute;
-  right:10px;
-  top:10px;
-  cursor:pointer;
-}
-
-.input-box{
-  position:relative;
-}
-
-.preview{
-  position:absolute;
-  right:10px;
-  top:8px;
-  font-size:10px;
-  opacity:0.7;
-}
+body.light .modal{background:#fff;color:#000;}
+.close{position:absolute;right:10px;top:10px;cursor:pointer;}
 </style>
 </head>
 
@@ -118,7 +48,10 @@ body.light .modal{
 <h2>NEXORA</h2>
 
 <button id="loginBtn" class="btn">Login</button>
-<button id="addBtn" class="btn">Add</button>
+<button id="addBtn" class="btn">Add Product</button>
+
+<input id="search" placeholder="Search...">
+<button onclick="clearSearch()">×</button>
 
 <div class="grid" id="productGrid"></div>
 </div>
@@ -130,47 +63,32 @@ body.light .modal{
 <div class="modal">
 <div class="close" onclick="closeLogin()">✖</div>
 
-<h3>Login / Register</h3>
+<h3>Login</h3>
 
-<div class="input-box">
-<input id="email" placeholder="Email veya Telefon">
-<div class="preview" id="emailPreview"></div>
-</div>
+<input id="loginUser" placeholder="Gmail veya Telefon">
+<input id="loginPass" type="password" maxlength="9" placeholder="Şifre">
 
-<div class="input-box">
-<input id="password" type="password" maxlength="9" placeholder="Şifre">
-<div class="preview" id="passPreview"></div>
-</div>
-
-<button onclick="register()">Kayıt Ol</button>
-<button onclick="login()">Giriş Yap</button>
+<button onclick="doLogin()">Giriş</button>
+<button onclick="doRegister()">Kayıt Ol</button>
 
 </div>
 </div>
 
-<!-- ADD MODAL -->
+<!-- ADD PRODUCT -->
 <div class="modal-backdrop" id="addModal">
 <div class="modal">
 <div class="close" onclick="closeAdd()">✖</div>
 
-<input id="pname" placeholder="Ürün adı">
-<input id="pprice" placeholder="Fiyat">
+<input id="modalName" placeholder="Ürün adı">
+<input id="modalPrice" placeholder="Fiyat">
 
-<button onclick="addProduct()">Ekle</button>
+<button onclick="submitProduct()">Ekle</button>
 
 </div>
 </div>
 
 <script>
-// FIREBASE CONFIG (BURAYA KENDİ KEYİNİ KOY)
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 🔥 FIREBASE CONFIG (SENİN)
 const firebaseConfig = {
   apiKey: "AIzaSyC43X-Z1t5V5A4Gauotr7k4aNgTyHbb-Mk",
   authDomain: "nexora-8af81.firebaseapp.com",
@@ -181,85 +99,93 @@ const firebaseConfig = {
   measurementId: "G-QM132D68K0"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-let currentUser = null;
+// ===== API =====
+const API_URL="https://nexora-backend-j2v3.onrender.com";
 
-// THEME
+let token=null;
+let currentUser=null;
+
+// ===== THEME =====
 function toggleTheme(){
   document.body.classList.toggle("light");
 }
 
-// INPUT PREVIEW
-email.oninput=()=>{
-  emailPreview.innerText=email.value;
-}
-password.oninput=()=>{
-  passPreview.innerText="*".repeat(password.value.length);
-}
-
-// LOGIN MODAL
+// ===== LOGIN =====
 loginBtn.onclick=()=>loginModal.style.display="flex";
 function closeLogin(){loginModal.style.display="none";}
 
-// ADD MODAL
-addBtn.onclick=()=>{
-  if(!currentUser)return alert("Login first");
-  addModal.style.display="flex";
-}
-function closeAdd(){addModal.style.display="none";}
-
-// REGISTER
-function register(){
-  const mail=email.value;
-  const pass=password.value;
+function doRegister(){
+  const user=loginUser.value;
+  const pass=loginPass.value;
 
   if(pass.length>9)return alert("Max 9 karakter");
 
-  auth.createUserWithEmailAndPassword(mail,pass)
-  .then(()=>{
-    alert("Kayıt başarılı");
-  })
+  auth.createUserWithEmailAndPassword(user,pass)
+  .then(()=>alert("Kayıt başarılı"))
   .catch(e=>alert(e.message));
 }
 
-// LOGIN
-function login(){
-  const mail=email.value;
-  const pass=password.value;
+async function doLogin(){
+  const user=loginUser.value;
+  const pass=loginPass.value;
 
-  auth.signInWithEmailAndPassword(mail,pass)
-  .then(user=>{
-    currentUser=user.user.email;
-    alert("Giriş başarılı");
-    closeLogin();
-  })
-  .catch(e=>alert(e.message));
+  try{
+    await auth.signInWithEmailAndPassword(user,pass);
+
+    const res=await fetch(API_URL+"/auth/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username:user,password:pass})
+    });
+
+    const data=await res.json();
+
+    if(data.token){
+      token=data.token;
+      currentUser=user;
+      localStorage.setItem("token",token);
+      alert("Giriş başarılı");
+      closeLogin();
+      renderProducts();
+    }
+  }catch(e){alert(e.message);}
 }
 
-// PRODUCTS (LOCAL)
-let products=[];
+// ===== ADD =====
+addBtn.onclick=()=>{
+  if(!token)return loginModal.style.display="flex";
+  addModal.style.display="flex";
+};
+function closeAdd(){addModal.style.display="none";}
 
-function addProduct(){
-  const name=pname.value;
-  const price=pprice.value;
+async function submitProduct(){
+  const name=modalName.value;
+  const price=modalPrice.value;
 
-  products.push({
-    name,price,owner:currentUser
+  await fetch(API_URL+"/products",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
+    },
+    body:JSON.stringify({name,price,owner:currentUser})
   });
 
-  render();
   closeAdd();
+  renderProducts();
 }
 
-function render(){
+// ===== PRODUCTS =====
+async function renderProducts(){
+  const res=await fetch(API_URL+"/products");
+  const products=await res.json();
+
   productGrid.innerHTML="";
-  products.forEach((p,i)=>{
+
+  products.forEach(p=>{
     const div=document.createElement("div");
     div.className="card";
 
@@ -267,18 +193,40 @@ function render(){
     <h3>${p.name}</h3>
     <p>${p.price}</p>
     <p>${p.owner}</p>
-    <button onclick="del(${i})">Delete</button>
-    <button>Follow</button>
     `;
+
+    const del=document.createElement("button");
+    del.innerText="Delete";
+    del.onclick=()=>deleteProduct(p._id);
+
+    const fol=document.createElement("button");
+    fol.innerText="Follow";
+
+    div.appendChild(del);
+    div.appendChild(fol);
 
     productGrid.appendChild(div);
   });
 }
 
-function del(i){
-  products.splice(i,1);
-  render();
+// ===== DELETE =====
+async function deleteProduct(id){
+  await fetch(API_URL+"/products/"+id,{
+    method:"DELETE",
+    headers:{"Authorization":"Bearer "+token}
+  });
+  renderProducts();
 }
+
+// ===== SEARCH =====
+search.oninput=renderProducts;
+function clearSearch(){
+  search.value="";
+  renderProducts();
+}
+
+// ===== START =====
+renderProducts();
 </script>
 
 </body>
