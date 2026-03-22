@@ -193,6 +193,8 @@ body.light .modal{
   <button id="addBtn">Add Product</button>
   <button id="profileBtn">Profile</button>
   <button id="feedBtn">Follow Feed</button>
+  <!-- YENİ KISIM: DEPLOY BUTONU -->
+  <button id="deployBtn" onclick="updateSiteFromPanel()">Deploy Site</button>
 </div>
 
 <div class="content">
@@ -323,7 +325,7 @@ async function renderProducts(){
     grid.innerHTML="";
     const searchVal=document.getElementById("search").value.toLowerCase();
     const catVal=document.getElementById("categoryFilter").value;
-    products.filter(p=> (catVal==="all"||p.cat===catVal) && p.name.toLowerCase().includes(searchVal))
+    products.filter(p=> (catVal==="all"||p.cat===p.cat) && p.name.toLowerCase().includes(searchVal))
       .forEach(p=>{
         const card=document.createElement("div");
         card.className="card";
@@ -341,6 +343,23 @@ async function renderProducts(){
         grid.appendChild(card);
       });
   }catch(err){console.log(err);}
+}
+
+/* DEPLOY SİSTEMİ (YENİ FONKSİYON) */
+async function updateSiteFromPanel(){
+  const newContent = document.documentElement.outerHTML;
+
+  const res = await fetch(API_URL+"/update-site", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      content: newContent
+    })
+  });
+
+  const data = await res.json();
+  console.log(data);
+  alert("Site güncellendi 🚀");
 }
 
 /* ADD / DELETE / FOLLOW / PROFILE / FEED / SEARCH SAME AS BEFORE */
