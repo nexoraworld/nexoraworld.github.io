@@ -41,7 +41,6 @@ button{
 button:hover{
   opacity:0.9;
 }
-/* ================= GRID ================= */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
@@ -70,7 +69,6 @@ body.light .card{
   background:#ff5050;
   color:#fff;
 }
-/* ================= FIXED BUTTONS ================= */
 .fixed-buttons{
   position:fixed;
   top:10px; left:50%;
@@ -80,7 +78,6 @@ body.light .card{
   flex-wrap:wrap;
   z-index:1000;
 }
-/* ================= THEME BUTTON ================= */
 .theme-toggle{
   position:fixed;
   bottom:10px; right:10px;
@@ -91,7 +88,6 @@ body.light .card{
   box-shadow:0 0 15px var(--cyan);
   z-index:1000;
 }
-/* ================= SEARCH BAR ================= */
 .input-wrapper{
   position:relative;
   display:flex;
@@ -118,7 +114,6 @@ body.light .card{
 .input-wrapper #searchClear:hover{
   color:#000;
 }
-/* ================= MODAL ================= */
 .modal-backdrop{
   display:none;
   position:fixed;
@@ -168,8 +163,6 @@ body.light .modal{
   color:gray;
   pointer-events:none;
 }
-
-/* ================= RESPONSIVE ================= */
 @media(max-width:600px){
   .grid{
     grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
@@ -188,12 +181,12 @@ body.light .modal{
 </style>
 </head>
 <body>
+
 <div class="fixed-buttons">
   <button id="loginBtn">Login / Register</button>
   <button id="addBtn">Add Product</button>
   <button id="profileBtn">Profile</button>
   <button id="feedBtn">Follow Feed</button>
-  <!-- YENİ KISIM: DEPLOY BUTONU -->
   <button id="deployBtn" onclick="updateSiteFromPanel()">Deploy Site</button>
 </div>
 
@@ -205,6 +198,7 @@ body.light .modal{
     <option value="SciFi">SciFi</option>
     <option value="Other">Other</option>
   </select>
+
   <div class="input-wrapper">
     <input id="search" placeholder="Search...">
     <span id="searchClear">×</span>
@@ -215,7 +209,6 @@ body.light .modal{
 
 <button class="theme-toggle" id="themeBtn">🌙</button>
 
-<!-- Modal -->
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <h3>Add Product</h3>
@@ -233,89 +226,6 @@ let currentUser = localStorage.getItem("currentUser") || null;
 let follows = JSON.parse(localStorage.getItem("follows")) || {};
 let ws=null;
 
-/* THEME */
-function toggleTheme(){
-  document.body.classList.toggle("light");
-  document.querySelector(".theme-toggle").textContent=document.body.classList.contains("light")?"☀":"🌙";
-  document.querySelectorAll(".card").forEach(c=>{
-    if(document.body.classList.contains("light")){
-      c.style.background="#eee"; c.style.color="#000";
-      c.querySelectorAll("button.followBtn").forEach(b=>b.style.background="#00bfff");
-    } else {
-      c.style.background="#444"; c.style.color="#fff";
-      c.querySelectorAll("button.followBtn").forEach(b=>b.style.background="#1e90ff");
-    }
-  });
-  document.querySelectorAll(".modal").forEach(m=>{
-    if(document.body.classList.contains("light")){m.style.background="#eee"; m.style.color="#000";}
-    else{m.style.background="#444"; m.style.color="#fff";}
-  });
-}
-
-/* LOGIN */
-async function openLogin(){
-  const loginModal=document.createElement("div");
-  loginModal.style.position="fixed";
-  loginModal.style.top="50%";
-  loginModal.style.left="50%";
-  loginModal.style.transform="translate(-50%,-50%)";
-  loginModal.style.background=document.body.classList.contains("light")?"#eee":"#333";
-  loginModal.style.color=document.body.classList.contains("light")?"#000":"#fff";
-  loginModal.style.padding="20px";
-  loginModal.style.borderRadius="10px";
-  loginModal.style.zIndex=3000;
-  loginModal.innerHTML=`
-    <h3>Login</h3>
-    <div style="position:relative;">
-      <input id="loginUser" placeholder="Username" style="padding-right:50px;">
-      <div class="character-box" id="userChars"></div>
-    </div>
-    <div style="position:relative; margin-top:10px;">
-      <input id="loginPass" placeholder="Password" type="password" style="padding-right:50px;">
-      <div class="character-box" id="passChars"></div>
-    </div>
-    <button id="loginSubmit">Login</button>
-    <button id="loginCancel">Cancel</button>
-  `;
-  document.body.appendChild(loginModal);
-
-  const userInput=document.getElementById("loginUser");
-  const passInput=document.getElementById("loginPass");
-  const userBox=document.getElementById("userChars");
-  const passBox=document.getElementById("passChars");
-
-  userInput.oninput=e=>{
-    userBox.innerHTML="";
-    for(let ch of e.target.value){
-      let span=document.createElement("span"); span.textContent=ch; span.style.fontSize="10px"; userBox.appendChild(span);
-    }
-  };
-  passInput.oninput=e=>{
-    passBox.innerHTML="";
-    for(let ch of e.target.value){
-      let span=document.createElement("span"); span.textContent=ch; span.style.fontSize="10px"; passBox.appendChild(span);
-    }
-  };
-
-  document.getElementById("loginSubmit").onclick=async ()=>{
-    const username=userInput.value;
-    const password=passInput.value;
-    if(!username||!password)return alert("Enter both");
-    try{
-      const res=await fetch(API_URL+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,password})});
-      const data=await res.json();
-      if(data.token){
-        token=data.token; currentUser=username;
-        localStorage.setItem("token",token);
-        localStorage.setItem("currentUser",currentUser);
-        alert("Logged in!"); renderProducts(); initWebSocket();
-        document.body.removeChild(loginModal);
-      } else alert(data.message||"Login failed");
-    } catch(err){console.log(err);}
-  };
-  document.getElementById("loginCancel").onclick=()=>document.body.removeChild(loginModal);
-}
-
 /* PRODUCTS */
 async function renderProducts(){
   try{
@@ -325,44 +235,49 @@ async function renderProducts(){
     grid.innerHTML="";
     const searchVal=document.getElementById("search").value.toLowerCase();
     const catVal=document.getElementById("categoryFilter").value;
-    products.filter(p=> (catVal==="all"||p.cat===p.cat) && p.name.toLowerCase().includes(searchVal))
+
+    products.filter(p=> (catVal==="all" || p.cat===catVal) && p.name.toLowerCase().includes(searchVal))
       .forEach(p=>{
         const card=document.createElement("div");
         card.className="card";
         card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;
+
         if(token){
           const followBtn=document.createElement("button");
-          followBtn.textContent="Follow"; followBtn.className="followBtn"; followBtn.onclick=()=>followUser(p.owner);
+          followBtn.textContent="Follow";
+          followBtn.className="followBtn";
+          followBtn.onclick=()=>followUser(p.owner);
           card.appendChild(followBtn);
+
           if(p.owner===currentUser){
             const delBtn=document.createElement("button");
-            delBtn.textContent="Delete"; delBtn.className="deleteBtn"; delBtn.onclick=()=>deleteProduct(p._id);
+            delBtn.textContent="Delete";
+            delBtn.className="deleteBtn";
+            delBtn.onclick=()=>deleteProduct(p._id);
             card.appendChild(delBtn);
           }
         }
+
         grid.appendChild(card);
       });
+
   }catch(err){console.log(err);}
 }
 
-/* DEPLOY SİSTEMİ (YENİ FONKSİYON) */
+/* DEPLOY */
 async function updateSiteFromPanel(){
   const newContent = document.documentElement.outerHTML;
-
   const res = await fetch(API_URL+"/update-site", {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      content: newContent
-    })
+    body: JSON.stringify({ content: newContent })
   });
-
   const data = await res.json();
   console.log(data);
   alert("Site güncellendi 🚀");
 }
 
-/* ADD / DELETE / FOLLOW / PROFILE / FEED / SEARCH SAME AS BEFORE */
+/* OTHER FUNCTIONS */
 function openAdd(){if(!token)return alert("Login first");document.getElementById("modalBackdrop").style.display="flex";}
 function closeModal(){document.getElementById("modalBackdrop").style.display="none";}
 async function submitProduct(){const name=document.getElementById("modalName").value;const price=document.getElementById("modalPrice").value;if(!name||!price)return alert("Enter both fields");const res=await fetch(API_URL+"/products",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({name,price,owner:currentUser})});if(res.ok){alert("Product added!");closeModal();renderProducts();}else alert("Error adding product!");}
@@ -370,15 +285,25 @@ async function deleteProduct(id){if(!token)return alert("Login first");await fet
 function followUser(user){if(!currentUser)return alert("Login first");if(user===currentUser)return alert("Cannot follow yourself");if(!follows[currentUser])follows[currentUser]=[];if(!follows[currentUser].includes(user))follows[currentUser].push(user);localStorage.setItem("follows",JSON.stringify(follows));alert("Followed "+user);}
 async function openProfile(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const myProducts=products.filter(p=>p.owner===currentUser);const grid=document.getElementById("productGrid");grid.innerHTML="";myProducts.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p>`;grid.appendChild(card);});}
 async function viewFeed(){if(!token)return alert("Login first");const res=await fetch(API_URL+"/products",{headers:{"Authorization":"Bearer "+token}});const products=await res.json();const grid=document.getElementById("productGrid");grid.innerHTML="";const feed=products.filter(p=>follows[currentUser]?.includes(p.owner));feed.forEach(p=>{const card=document.createElement("div");card.className="card";card.innerHTML=`<h3>${p.name}</h3><p>Price: ${p.price}</p><p>By: ${p.owner}</p>`;grid.appendChild(card);});}
-const searchInput=document.getElementById("search");searchInput.oninput=()=>{renderProducts();};
+
+const searchInput=document.getElementById("search");
+searchInput.oninput=()=>{renderProducts();};
 document.getElementById("searchClear").onclick=()=>{searchInput.value=""; renderProducts();}
 document.getElementById("loginBtn").onclick=openLogin;
 document.getElementById("addBtn").onclick=openAdd;
 document.getElementById("profileBtn").onclick=openProfile;
 document.getElementById("feedBtn").onclick=viewFeed;
 document.getElementById("themeBtn").onclick=toggleTheme;
-function initWebSocket(){if(ws)ws.close();ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws"); ws.onmessage=e=>renderProducts();}
-renderProducts(); if(token)initWebSocket();
+
+function initWebSocket(){
+  if(ws)ws.close();
+  ws=new WebSocket("wss://nexora-backend-j2v3.onrender.com/ws");
+  ws.onmessage=e=>renderProducts();
+}
+
+renderProducts();
+if(token)initWebSocket();
 </script>
+
 </body>
 </html>
